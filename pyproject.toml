@@ -3,7 +3,11 @@ name = "rubio-cli-kit"
 version = "1.0.0"
 description = "Shared CLI-contract helpers and pytest11 contract harness for the Rubio-Enterprises fleet's per-tool CLI repos"
 requires-python = ">=3.14.6"
-dependencies = []
+dependencies = [
+  "rich>=15.0.0",
+  "structlog>=26.1.0",
+  "typer>=0.26.8",
+]
 
 [dependency-groups]
 dev = [
