@@ -72,6 +72,69 @@ def main(name: Annotated[str, typer.Argument()]) -> None:
 The single-command factory adds `--version` and `--verbose` to the root command without forcing the
 consumer to repeat those parameters in its callback signature.
 
+## Contract harness
+
+The distribution registers `rubio_cli_kit.pytest_plugin` through the `pytest11` entry-point group.
+Pytest therefore loads the contract automatically in any project that declares `rubio-cli-kit`; a
+consumer does not add a test driver or `conftest.py`.
+
+A consumer owns two inputs:
+
+1. `tests/contract_table.py`, containing its non-hook command rows and any imperative sandbox setup
+   callables.
+2. `src/<package>/catalog.toml`, containing one `[[command]]` row for every console script.
+
+```python
+# tests/contract_table.py
+from rubio_cli_kit.contracts import CommandContract
+from rubio_cli_kit.testing import CliSandbox
+
+
+def _setup(sandbox: CliSandbox) -> None:
+    config = sandbox.xdg_config_path("example", "config.toml")
+    config.parent.mkdir(parents=True)
+    config.write_text('message = "hello"\n')
+
+
+COMMANDS = (
+    CommandContract(
+        name="example",
+        help_paths=(("show",),),
+        json_args=("show", "--json"),
+        usage_error_args=("show", "--unknown"),
+        runtime_error_args=("show",),
+        setup=_setup,
+    ),
+)
+```
+
+```toml
+# src/example/catalog.toml
+[[command]]
+name = "example"
+purpose = "Show the configured example value."
+use_when = "Use when the user wants to inspect the example configuration."
+```
+
+The generated tests execute the installed console scripts as subprocesses with a temporary HOME,
+XDG roots, and hermetic PATH. They enforce external behavior only:
+
+- `-h`, `--help`, `--version`, and `--verbose` at the root of both sanctioned CLI shapes;
+- every declared help path;
+- usage errors at exit 2 and runtime errors at exit 1, with clean stdout;
+- a parseable, chatter-free JSON value when JSON mode is supported;
+- exact parity between `[project.scripts]`, catalog rows, and non-hook contract rows;
+- a direct `typer` declaration in the consumer manifest.
+
+Catalog rows marked `hook = true` need no `CommandContract` row and may omit `purpose` / `use_when`.
+The harness recursively follows their project-local imports and rejects any dependency outside the
+Python standard library. This keeps latency-sensitive hook entry points stdlib-only even when their
+implementation is split across local modules.
+
+The plugin also exports the `home`, `cli_env`, `cli`, `fake_path`, and `fake_http_server` fixtures for
+consumer-specific tests. `CliSandbox`, `FakePath`, and `FakeHttpServer` are public from
+`rubio_cli_kit.testing`.
+
 ## Helper modules
 
 - `rubio_cli_kit._cli` — Typer factories, exit codes, command-name prefixes, and runtime failures.
