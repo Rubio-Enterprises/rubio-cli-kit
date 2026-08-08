@@ -224,6 +224,25 @@ hook = true
     project.assert_hook_stdlib_only("example-hook")
 
 
+def test_hook_import_check_resolves_keyword_relative_dynamic_imports(tmp_path: Path) -> None:
+    project = _write_project(
+        tmp_path,
+        scripts=(("example-hook", "example_tool.cli:main"),),
+        catalog="""[[command]]
+name = "example-hook"
+hook = true
+""",
+    )
+    package = tmp_path / "src" / "example_tool"
+    (package / "cli.py").write_text(
+        "import importlib\n\ndef main() -> None:\n"
+        "    importlib.import_module('.helper', package=__package__)\n"
+    )
+    (package / "helper.py").write_text("import json\n")
+
+    project.assert_hook_stdlib_only("example-hook")
+
+
 def test_hook_import_check_rejects_computed_dynamic_imports(tmp_path: Path) -> None:
     project = _write_project(
         tmp_path,

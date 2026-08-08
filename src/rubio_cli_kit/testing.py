@@ -49,7 +49,7 @@ class FakePath:
         stdout: str = "",
         stderr: str = "",
     ) -> Path:
-        lines = [f'printf "%s\\n" "$*" >> {shlex.quote(str(argv_log))}']
+        lines = [f'printf "%s\\0" "$#" "$@" >> {shlex.quote(str(argv_log))}']
         if stdout:
             lines.append(f"printf %s {shlex.quote(stdout)}")
         if stderr:

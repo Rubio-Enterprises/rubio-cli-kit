@@ -383,9 +383,13 @@ class ContractProject:
                 return "<dynamic import>"
             if not target.startswith("."):
                 return target
-            if len(node.args) < 2:
+            package_args = list(node.args[1:])
+            package_args.extend(
+                keyword.value for keyword in node.keywords if keyword.arg == "package"
+            )
+            if len(package_args) != 1:
                 return "<dynamic import>"
-            package_arg = node.args[1]
+            package_arg = package_args[0]
             if isinstance(package_arg, ast.Name) and package_arg.id == "__package__":
                 package = ".".join(package_parts)
             elif isinstance(package_arg, ast.Constant) and isinstance(package_arg.value, str):
