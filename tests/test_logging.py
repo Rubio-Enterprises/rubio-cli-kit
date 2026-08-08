@@ -1,10 +1,25 @@
 from __future__ import annotations
 
+import importlib
 import json
 
 import pytest
+import structlog
 
 from rubio_cli_kit import _logging
+
+
+def test_logging_has_a_stderr_baseline_before_explicit_configuration(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    structlog.reset_defaults()
+    importlib.reload(_logging)
+
+    _logging.get_logger("example").warning("startup")
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "startup" in captured.err
 
 
 def test_verbose_mode_enables_debug_diagnostics(

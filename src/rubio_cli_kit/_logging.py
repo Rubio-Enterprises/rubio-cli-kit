@@ -48,3 +48,6 @@ def configure(*, verbose: bool | None = None, json_output: bool | None = None) -
 def get_logger(name: str) -> structlog.typing.FilteringBoundLogger:
     """Return a named logger honoring the current configuration."""
     return structlog.get_logger(name)
+
+
+configure()

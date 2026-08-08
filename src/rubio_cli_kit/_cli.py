@@ -57,9 +57,20 @@ def _importing_distribution_name() -> str:
     return distributions[0] if distributions else top_level_package
 
 
-def _bind_app_identity(*, name: str, distribution: str) -> None:
-    _PROG.set(name)
-    _DIST.set(distribution)
+def _bind_app_identity(
+    ctx: typer.Context,
+    *,
+    name: str,
+    distribution: str,
+) -> None:
+    prog_token = _PROG.set(name)
+    dist_token = _DIST.set(distribution)
+
+    def reset() -> None:
+        _DIST.reset(dist_token)
+        _PROG.reset(prog_token)
+
+    ctx.call_on_close(reset)
 
 
 def _print_version(requested: bool, *, distribution: str | None = None) -> None:
@@ -106,8 +117,10 @@ def make_app(
         pretty_exceptions_enable=False,
     )
 
-    def print_app_version(requested: bool) -> None:
-        _bind_app_identity(name=name, distribution=distribution)
+    def print_app_version(ctx: typer.Context, requested: bool) -> None:
+        if ctx.resilient_parsing:
+            return
+        _bind_app_identity(ctx, name=name, distribution=distribution)
         _print_version(requested, distribution=distribution)
 
     @app.callback(invoke_without_command=default_command is not None)
@@ -127,7 +140,7 @@ def make_app(
         ),
     ) -> None:
         del version
-        _bind_app_identity(name=name, distribution=distribution)
+        _bind_app_identity(ctx, name=name, distribution=distribution)
         _logging.configure(verbose=verbose)
         if default_command is None or ctx.invoked_subcommand is not None:
             return
@@ -153,7 +166,6 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
         requested: bool,
     ) -> None:
         if requested and not ctx.resilient_parsing:
-            _bind_app_identity(name=name, distribution=distribution)
             _output.emit_text(importlib.metadata.version(distribution))
             ctx.exit(ExitCode.OK)
 
@@ -163,7 +175,6 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
         verbose: bool,
     ) -> None:
         if not ctx.resilient_parsing:
-            _bind_app_identity(name=name, distribution=distribution)
             _logging.configure(verbose=verbose)
 
     class SingleCommand(TyperCommand):
@@ -182,6 +193,7 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
                     TyperOption(
                         param_decls=["--verbose"],
                         is_flag=True,
+                        is_eager=True,
                         expose_value=False,
                         callback=verbose_callback,
                         help="Enable DEBUG diagnostics on stderr.",
@@ -195,9 +207,8 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
             args: list[str],
         ) -> list[str]:
             if not ctx.resilient_parsing:
-                _bind_app_identity(name=name, distribution=distribution)
-                option_args = args[: args.index("--")] if "--" in args else args
-                _logging.configure(verbose="--verbose" in option_args)
+                _bind_app_identity(ctx, name=name, distribution=distribution)
+                _logging.configure(verbose=False)
             return super().parse_args(ctx, args)
 
     return SingleCommand
@@ -218,6 +229,14 @@ class _SingleCommandTyper(typer.Typer):
         self._command_type = command_type
         self._help_text = help_text
         self._command_registered = False
+
+    def callback(  # type: ignore[override]
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Callable[..., Any]:
+        del args, kwargs
+        raise TypeError("single-command apps do not support callbacks")
 
     def command(  # type: ignore[override]
         self,

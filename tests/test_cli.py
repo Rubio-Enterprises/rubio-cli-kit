@@ -349,3 +349,51 @@ def test_subcommand_version_respects_resilient_parsing(
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
+
+
+def test_single_command_rejects_callbacks() -> None:
+    app = _make_app_from_package(make_single_command_app)
+
+    with pytest.raises(TypeError, match="do not support callbacks"):
+
+        @app.callback()
+        def custom_callback() -> None:
+            pass
+
+
+def test_single_command_does_not_treat_an_option_value_as_verbose() -> None:
+    _logging.configure(verbose=False)
+    app = _make_app_from_package(make_single_command_app)
+
+    @app.command()
+    def main(
+        message: Annotated[str, typer.Option("--message", callback=_debug_from_callback)],
+    ) -> None:
+        typer.echo(message)
+
+    result = runner.invoke(app, ["--message", "--verbose"])
+
+    assert result.exit_code == 0
+    assert result.stdout == "--verbose\n"
+    assert "parameter callback" not in Text.from_ansi(result.stderr).plain
+
+
+def test_nested_invocation_restores_the_outer_app_identity() -> None:
+    inner = _make_app_from_package(make_app, name="inner")
+
+    @inner.command()
+    def done() -> None:
+        pass
+
+    inner_command = get_command(inner)
+    outer = _make_app_from_package(make_app, name="outer")
+
+    @outer.command()
+    def run() -> None:
+        inner_command.main(args=["done"], prog_name="inner", standalone_mode=False)
+        fail("after inner")
+
+    result = runner.invoke(outer, ["run"])
+
+    assert result.exit_code == 1
+    assert Text.from_ansi(result.stderr).plain == "outer: after inner\n"
