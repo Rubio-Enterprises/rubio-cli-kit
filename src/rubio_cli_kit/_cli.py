@@ -29,7 +29,6 @@ class ExitCode(IntEnum):
 
 
 _PROG = ContextVar("rubio_cli_kit_prog", default="command")
-_DIST = ContextVar("rubio_cli_kit_dist", default="rubio-cli-kit")
 
 
 def prog_name() -> str:
@@ -65,24 +64,17 @@ def _importing_distribution_name() -> str:
     return distributions[0]
 
 
-def _set_app_identity(*, name: str, distribution: str) -> Callable[[], None]:
+def _set_app_identity(*, name: str) -> Callable[[], None]:
     prog_token = _PROG.set(name)
-    dist_token = _DIST.set(distribution)
 
     def reset() -> None:
-        _DIST.reset(dist_token)
         _PROG.reset(prog_token)
 
     return reset
 
 
-def _bind_app_identity(
-    ctx: typer.Context,
-    *,
-    name: str,
-    distribution: str,
-) -> None:
-    ctx.call_on_close(_set_app_identity(name=name, distribution=distribution))
+def _bind_app_identity(ctx: typer.Context, *, name: str) -> None:
+    ctx.call_on_close(_set_app_identity(name=name))
 
 
 def _bind_logging(ctx: typer.Context, *, verbose: bool) -> None:
@@ -95,15 +87,10 @@ def _bind_logging(ctx: typer.Context, *, verbose: bool) -> None:
     )
 
 
-def _print_version(requested: bool, *, distribution: str | None = None) -> None:
+def _print_version(requested: bool, *, distribution: str) -> None:
     if requested:
-        _output.emit_text(importlib.metadata.version(distribution or _DIST.get()))
+        _output.emit_text(importlib.metadata.version(distribution))
         raise typer.Exit(ExitCode.OK)
-
-
-def print_version(requested: bool) -> None:
-    """Print the current distribution's version for an eager Typer option."""
-    _print_version(requested)
 
 
 class _SubcommandTyper(typer.Typer):
@@ -161,7 +148,7 @@ def make_app(
         ),
     ) -> None:
         del version
-        _bind_app_identity(ctx, name=name, distribution=distribution)
+        _bind_app_identity(ctx, name=name)
         _bind_logging(ctx, verbose=verbose)
         if default_command is None or ctx.invoked_subcommand is not None:
             return
@@ -239,7 +226,7 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
             if ctx.resilient_parsing:
                 return super().parse_args(ctx, args)
 
-            reset_identity = _set_app_identity(name=name, distribution=distribution)
+            reset_identity = _set_app_identity(name=name)
             previous_logging = _logging.configure(verbose=False)
             try:
                 remaining = super().parse_args(ctx, args)
