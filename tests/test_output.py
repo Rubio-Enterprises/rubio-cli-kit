@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 
 import pytest
 
@@ -15,6 +16,17 @@ def test_data_helpers_keep_stdout_machine_clean(capsys: pytest.CaptureFixture[st
     assert captured.out.startswith("plain text\n")
     assert json.loads(captured.out.removeprefix("plain text\n")) == {"result": "ok"}
     assert captured.err == ""
+
+
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_emit_json_rejects_non_finite_numbers(
+    value: float,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(ValueError):
+        _output.emit_json({"value": value})
+
+    assert capsys.readouterr().out == ""
 
 
 def test_status_helpers_write_only_to_stderr(capsys: pytest.CaptureFixture[str]) -> None:

@@ -171,6 +171,16 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
                 ]
             )
 
+        def parse_args(  # type: ignore[override]
+            self,
+            ctx: typer.Context,
+            args: list[str],
+        ) -> list[str]:
+            if not ctx.resilient_parsing:
+                _bind_app_identity(name=name, distribution=distribution)
+                _logging.configure(verbose="--verbose" in args)
+            return super().parse_args(ctx, args)
+
     return SingleCommand
 
 
@@ -194,7 +204,9 @@ class _SingleCommandTyper(typer.Typer):
         name: str | None = None,
         **kwargs: Any,
     ) -> Callable[[CommandFunction], CommandFunction]:
-        kwargs.setdefault("cls", self._command_type)
+        if "cls" in kwargs:
+            raise TypeError("single-command apps do not support custom command classes")
+        kwargs["cls"] = self._command_type
         kwargs.setdefault("help", self._help_text)
         return super().command(name, **kwargs)
 

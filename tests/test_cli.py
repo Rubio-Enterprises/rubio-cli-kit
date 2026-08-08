@@ -3,11 +3,12 @@ from __future__ import annotations
 import importlib.metadata
 import inspect
 from collections.abc import Callable
-from typing import Annotated, cast
+from typing import Annotated, NoReturn, cast
 
 import pytest
 import typer
 from rich.text import Text
+from typer.core import TyperCommand
 from typer.testing import CliRunner
 
 from rubio_cli_kit import _logging
@@ -18,6 +19,15 @@ runner = CliRunner()
 
 def _uppercase(value: str) -> str:
     return value.upper()
+
+
+def _debug_from_callback(value: str) -> str:
+    _logging.get_logger("example").debug("parameter callback", value=value)
+    return value
+
+
+def _fail_from_callback(value: str) -> NoReturn:
+    fail(f"callback failed for {value}")
 
 
 def _make_app_from_package(
@@ -199,3 +209,52 @@ def test_default_command_runs_option_callbacks() -> None:
 
     assert result.exit_code == 0, (result.stdout, result.stderr, result.exception)
     assert result.stdout == "HUMAN\n"
+
+
+def test_single_command_binds_identity_before_parameter_callbacks() -> None:
+    first = _make_app_from_package(make_single_command_app, name="first")
+
+    @first.command()
+    def first_command(
+        value: Annotated[str, typer.Option("--value", callback=_fail_from_callback)],
+    ) -> None:
+        typer.echo(value)
+
+    second = _make_app_from_package(make_single_command_app, name="second")
+
+    @second.command()
+    def second_command(value: Annotated[str, typer.Argument()]) -> None:
+        typer.echo(value)
+
+    assert runner.invoke(second, ["ready"]).exit_code == 0
+
+    result = runner.invoke(first, ["--value", "broken"])
+
+    assert result.exit_code == 1
+    assert Text.from_ansi(result.stderr).plain == "first: callback failed for broken\n"
+
+
+def test_single_command_configures_verbose_before_parameter_callbacks() -> None:
+    _logging.configure(verbose=False)
+    app = _make_app_from_package(make_single_command_app)
+
+    @app.command()
+    def main(
+        value: Annotated[str, typer.Option("--value", callback=_debug_from_callback)],
+    ) -> None:
+        typer.echo(value)
+
+    result = runner.invoke(app, ["--value", "ready", "--verbose"])
+
+    assert result.exit_code == 0
+    assert "parameter callback" in Text.from_ansi(result.stderr).plain
+
+
+def test_single_command_rejects_custom_command_classes() -> None:
+    app = _make_app_from_package(make_single_command_app)
+
+    with pytest.raises(TypeError, match="custom command classes"):
+
+        @app.command(cls=TyperCommand)
+        def main() -> None:
+            pass

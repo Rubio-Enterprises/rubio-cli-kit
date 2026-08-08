@@ -25,7 +25,7 @@ def emit_text(text: str) -> None:
 
 def emit_json(payload: object) -> None:
     """Write machine-clean JSON data to stdout."""
-    typer.echo(json.dumps(payload, indent=2))
+    typer.echo(json.dumps(payload, indent=2, allow_nan=False))
 
 
 def status(message: str) -> None:
