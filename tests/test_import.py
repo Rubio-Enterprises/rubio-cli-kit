@@ -1,5 +1,7 @@
-import rubio_cli_kit
+from rubio_cli_kit import _cli, _logging, _output, _paths
 
 
-def test_package_imports() -> None:
-    assert rubio_cli_kit is not None
+def test_distribution_ships_all_four_helper_modules() -> None:
+    modules = (_cli, _logging, _output, _paths)
+
+    assert all(module.__package__ == "rubio_cli_kit" for module in modules)
