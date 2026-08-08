@@ -52,7 +52,9 @@ def _importing_distribution_name() -> str:
         del frame
     if not isinstance(package, str) or not package:
         raise RuntimeError("CLI apps must be constructed from an importable package")
-    return package.partition(".")[0]
+    top_level_package = package.partition(".")[0]
+    distributions = importlib.metadata.packages_distributions().get(top_level_package)
+    return distributions[0] if distributions else top_level_package
 
 
 def _bind_app_identity(*, name: str, distribution: str) -> None:
@@ -71,6 +73,22 @@ def print_version(requested: bool) -> None:
     _print_version(requested)
 
 
+class _SubcommandTyper(typer.Typer):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._callback_registered = False
+
+    def callback(  # type: ignore[override]
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Callable[..., Any]:
+        if self._callback_registered:
+            raise TypeError("subcommand apps do not support additional callbacks")
+        self._callback_registered = True
+        return super().callback(*args, **kwargs)
+
+
 def make_app(
     *,
     name: str,
@@ -79,7 +97,7 @@ def make_app(
 ) -> typer.Typer:
     """Build a subcommand application with the complete shared root shape."""
     distribution = _importing_distribution_name()
-    app = typer.Typer(
+    app = _SubcommandTyper(
         name=name,
         help=help_text,
         no_args_is_help=default_command is None,
@@ -178,7 +196,8 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
         ) -> list[str]:
             if not ctx.resilient_parsing:
                 _bind_app_identity(name=name, distribution=distribution)
-                _logging.configure(verbose="--verbose" in args)
+                option_args = args[: args.index("--")] if "--" in args else args
+                _logging.configure(verbose="--verbose" in option_args)
             return super().parse_args(ctx, args)
 
     return SingleCommand
@@ -198,17 +217,27 @@ class _SingleCommandTyper(typer.Typer):
         super().__init__(**kwargs)
         self._command_type = command_type
         self._help_text = help_text
+        self._command_registered = False
 
     def command(  # type: ignore[override]
         self,
         name: str | None = None,
         **kwargs: Any,
     ) -> Callable[[CommandFunction], CommandFunction]:
+        if self._command_registered:
+            raise TypeError("single-command apps require exactly one command")
         if "cls" in kwargs:
             raise TypeError("single-command apps do not support custom command classes")
         kwargs["cls"] = self._command_type
         kwargs.setdefault("help", self._help_text)
-        return super().command(name, **kwargs)
+        decorator = super().command(name, **kwargs)
+
+        def register(function: CommandFunction) -> CommandFunction:
+            result = decorator(function)
+            self._command_registered = True
+            return result
+
+        return register
 
 
 def make_single_command_app(*, name: str, help_text: str) -> typer.Typer:

@@ -9,6 +9,7 @@ import pytest
 import typer
 from rich.text import Text
 from typer.core import TyperCommand
+from typer.main import get_command
 from typer.testing import CliRunner
 
 from rubio_cli_kit import _logging
@@ -258,3 +259,93 @@ def test_single_command_rejects_custom_command_classes() -> None:
         @app.command(cls=TyperCommand)
         def main() -> None:
             pass
+
+
+def test_single_command_rejects_a_second_registration() -> None:
+    app = _make_app_from_package(make_single_command_app)
+
+    @app.command()
+    def first() -> None:
+        pass
+
+    with pytest.raises(TypeError, match="exactly one command"):
+
+        @app.command()
+        def second() -> None:
+            pass
+
+
+def test_single_command_honors_the_option_terminator() -> None:
+    _logging.configure(verbose=False)
+    app = _make_app_from_package(make_single_command_app)
+
+    @app.command()
+    def main(
+        value: Annotated[str, typer.Argument(callback=_debug_from_callback)],
+    ) -> None:
+        typer.echo(value)
+
+    result = runner.invoke(app, ["--", "--verbose"])
+
+    assert result.exit_code == 0
+    assert result.stdout == "--verbose\n"
+    assert "parameter callback" not in Text.from_ansi(result.stderr).plain
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [make_app, make_single_command_app],
+    ids=["subcommand", "single-command"],
+)
+def test_distribution_name_uses_installed_package_mapping(
+    monkeypatch: pytest.MonkeyPatch,
+    factory: Callable[..., typer.Typer],
+) -> None:
+    monkeypatch.setattr(
+        importlib.metadata,
+        "packages_distributions",
+        lambda: {"acme": ["acme-cli"]},
+    )
+    _patch_version(monkeypatch, expected_distribution="acme-cli")
+    app = _make_app_from_package(factory, package="acme.commands")
+
+    @app.command()
+    def main() -> None:
+        pass
+
+    result = runner.invoke(app, ["--version"])
+
+    assert result.exit_code == 0
+
+
+def test_subcommand_app_rejects_additional_callbacks() -> None:
+    app = _make_app_from_package(make_app)
+
+    with pytest.raises(TypeError, match="additional callbacks"):
+
+        @app.callback()
+        def custom_callback() -> None:
+            pass
+
+
+def test_subcommand_version_respects_resilient_parsing(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def unexpected_version_lookup(_distribution: str) -> str:
+        raise AssertionError("resilient parsing must not resolve the version")
+
+    monkeypatch.setattr(importlib.metadata, "version", unexpected_version_lookup)
+    app = _make_app_from_package(make_app)
+    command = get_command(app)
+
+    with command.make_context(
+        "example",
+        ["--version"],
+        resilient_parsing=True,
+    ):
+        pass
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
