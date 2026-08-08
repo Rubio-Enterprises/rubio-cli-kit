@@ -7,6 +7,7 @@ from typing import Annotated, cast
 
 import pytest
 import typer
+from rich.text import Text
 from typer.testing import CliRunner
 
 from rubio_cli_kit import _logging
@@ -54,8 +55,9 @@ def test_subcommand_shape_has_complete_root_options_and_logging(
 
     help_result = runner.invoke(app, ["--help"])
     assert help_result.exit_code == 0
+    help_text = Text.from_ansi(help_result.stdout).plain
     for option in ("-h", "--help", "--version", "--verbose"):
-        assert option in help_result.stdout
+        assert option in help_text
 
     version_result = runner.invoke(app, ["--version"])
     assert version_result.exit_code == 0
@@ -82,8 +84,9 @@ def test_single_command_shape_has_complete_root_options_and_logging(
 
     help_result = runner.invoke(app, ["--help"])
     assert help_result.exit_code == 0
+    help_text = Text.from_ansi(help_result.stdout).plain
     for option in ("-h", "--help", "--version", "--verbose"):
-        assert option in help_result.stdout
+        assert option in help_text
 
     version_result = runner.invoke(app, ["--version"])
     assert version_result.exit_code == 0
