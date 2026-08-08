@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 SYSTEM_PATH = ("/usr/bin", "/bin", "/usr/sbin", "/sbin")
+DEFAULT_TIMEOUT_SECONDS = 30.0
 
 
 def _join(root: Path, parts: tuple[str, ...]) -> Path:
@@ -79,7 +80,10 @@ class CliSandbox:
         return _join(self.home / ".cache", parts)
 
     def fake_path(self, dirname: str = "fake-bin") -> FakePath:
-        return FakePath(self.home / dirname)
+        fake = FakePath(self.home / dirname)
+        if fake.path not in self.path_prepend:
+            self.path_prepend.append(fake.path)
+        return fake
 
     def fake_http_server(self) -> FakeHttpServer:
         server = FakeHttpServer()
@@ -132,6 +136,7 @@ class CliSandbox:
         path_prepend: Sequence[Path] = (),
         env_extra: Mapping[str, str] | None = None,
         input_text: str | None = None,
+        timeout: float = DEFAULT_TIMEOUT_SECONDS,
     ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(  # noqa: S603
             [str(self.scripts_dir / command), *args],
@@ -140,6 +145,7 @@ class CliSandbox:
             text=True,
             env=self.environ(path_prepend=path_prepend, env_extra=env_extra),
             check=False,
+            timeout=timeout,
         )
 
 

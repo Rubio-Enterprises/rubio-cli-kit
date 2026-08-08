@@ -87,6 +87,74 @@ testpaths = ["tests"]
     assert "contract:kit:no-catalog" in result.stdout.str()
 
 
+def test_plugin_ignores_projects_that_do_not_consume_the_kit(
+    pytester: pytest.Pytester,
+) -> None:
+    pytester.makepyprojecttoml(
+        """[tool.pytest.ini_options]
+testpaths = ["tests"]
+"""
+    )
+    pytester.makepyfile(**{"tests/test_plain": "def test_plain() -> None:\n    assert True\n"})
+
+    result = pytester.runpytest_subprocess("-q")
+
+    result.assert_outcomes(passed=1)
+    assert "INTERNALERROR" not in result.stderr.str()
+
+
+def test_plugin_reports_invalid_consumer_manifest_as_a_test_failure(
+    pytester: pytest.Pytester,
+) -> None:
+    pytester.makepyprojecttoml(
+        """[project]
+name = 42
+version = "1.2.3"
+dependencies = ["rubio-cli-kit", "typer>=0.26.8"]
+"""
+    )
+
+    result = pytester.runpytest_subprocess("-q")
+
+    result.assert_outcomes(failed=1)
+    assert "contract:configuration:valid" in result.stdout.str()
+    assert "INTERNALERROR" not in result.stderr.str()
+
+
+def test_plugin_reports_contract_table_exceptions_as_test_failures(
+    pytester: pytest.Pytester,
+) -> None:
+    pytester.makepyprojecttoml(
+        """[project]
+name = "example-tool"
+version = "1.2.3"
+dependencies = ["rubio-cli-kit", "typer>=0.26.8"]
+
+[project.scripts]
+example = "example_tool.cli:app"
+"""
+    )
+    pytester.makefile(
+        ".toml",
+        **{
+            "src/example_tool/catalog": """[[command]]
+name = "example"
+purpose = "Do the example thing."
+use_when = "Use when an example is needed."
+"""
+        },
+    )
+    pytester.makepyfile(
+        **{"tests/contract_table": "raise RuntimeError('broken contract table')\n"},
+    )
+
+    result = pytester.runpytest_subprocess("-q")
+
+    result.assert_outcomes(passed=1, failed=1)
+    assert "broken contract table" in result.stdout.str()
+    assert "INTERNALERROR" not in result.stderr.str()
+
+
 def test_command_table_location_is_relative_to_project_root(tmp_path: Path) -> None:
     root = tmp_path / "standalone"
     table = root / "tests" / "contract_table.py"

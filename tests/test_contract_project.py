@@ -242,6 +242,25 @@ hook = true
     project.assert_hook_stdlib_only("example-hook")
 
 
+def test_hook_import_check_accepts_local_namespace_packages(tmp_path: Path) -> None:
+    project = _write_project(
+        tmp_path,
+        scripts=(("example-hook", "acme.cli:main"),),
+        catalog="""[[command]]
+name = "example-hook"
+hook = true
+""",
+    )
+    namespace = tmp_path / "src" / "acme"
+    namespace.mkdir()
+    (namespace / "cli.py").write_text(
+        "from acme import helper\n\ndef main() -> None:\n    helper.run()\n"
+    )
+    (namespace / "helper.py").write_text("import json\n\ndef run() -> None:\n    json.dumps({})\n")
+
+    project.assert_hook_stdlib_only("example-hook")
+
+
 def test_kit_must_not_ship_a_catalog_fragment(tmp_path: Path) -> None:
     project = _write_project(
         tmp_path,

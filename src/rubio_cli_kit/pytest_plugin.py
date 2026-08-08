@@ -5,7 +5,6 @@ from __future__ import annotations
 import importlib.metadata
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -109,7 +108,8 @@ class ContractFile(pytest.File):
         try:
             catalog = project.load_catalog()
             contracts = project.load_contracts()
-        except (AssertionError, OSError, SyntaxError, tomllib.TOMLDecodeError) as error:
+        # Consumer modules can fail arbitrarily; report that as a contract test.
+        except Exception as error:
             yield _function(
                 self,
                 name="contract:configuration:valid",
@@ -183,4 +183,18 @@ def pytest_collection_modifyitems(
     if not manifest.is_file():
         return
     collector = ContractFile.from_parent(session, path=manifest)
-    items.extend(collector.collect())
+    try:
+        if not ContractProject.participates(manifest.parent):
+            return
+        collected = list(collector.collect())
+    # Collection failures must become visible test failures, not INTERNALERRORs.
+    except Exception as error:
+        items.append(
+            _function(
+                collector,
+                name="contract:configuration:valid",
+                call=_failure(error),
+            )
+        )
+        return
+    items.extend(collected)

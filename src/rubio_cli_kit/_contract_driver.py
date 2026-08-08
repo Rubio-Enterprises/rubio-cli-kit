@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import shutil
+import tempfile
+from pathlib import Path
 
 from rubio_cli_kit.contracts import CommandContract
 from rubio_cli_kit.testing import CliSandbox
@@ -44,8 +47,14 @@ class ContractDriver:
     def assert_bare_invocation(self, contract: CommandContract, sandbox: CliSandbox) -> None:
         if contract.default_command is not None:
             contract.setup(sandbox)
-            bare = sandbox.run(contract.name)
-            explicit = sandbox.run(contract.name, contract.default_command)
+            with tempfile.TemporaryDirectory(dir=sandbox.home.parent) as temporary:
+                baseline = Path(temporary) / "home"
+                shutil.copytree(sandbox.home, baseline)
+                bare = sandbox.run(contract.name)
+                if sandbox.home.exists():
+                    shutil.rmtree(sandbox.home)
+                shutil.copytree(baseline, sandbox.home)
+                explicit = sandbox.run(contract.name, contract.default_command)
             assert bare.returncode == explicit.returncode
             assert bare.stdout == explicit.stdout
             assert bare.stderr == explicit.stderr

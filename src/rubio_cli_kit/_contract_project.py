@@ -65,6 +65,28 @@ class ContractProject:
     root: Path
     manifest: ProjectManifest
 
+    @staticmethod
+    def participates(root: Path) -> bool:
+        """Return whether this project should receive synthetic contract tests."""
+        pyproject = root / "pyproject.toml"
+        with pyproject.open("rb") as file:
+            data = tomllib.load(file)
+        project = data.get("project")
+        if not isinstance(project, dict):
+            return False
+        name = project.get("name")
+        if isinstance(name, str) and _normalize_distribution(name) == KIT_DISTRIBUTION:
+            return True
+        dependencies = project.get("dependencies")
+        if not isinstance(dependencies, list):
+            return False
+        return any(
+            isinstance(dependency, str)
+            and (match := _DEPENDENCY_NAME.match(dependency)) is not None
+            and _normalize_distribution(match.group(1)) == KIT_DISTRIBUTION
+            for dependency in dependencies
+        )
+
     @classmethod
     def from_root(cls, root: Path) -> ContractProject:
         pyproject = root / "pyproject.toml"
@@ -235,6 +257,10 @@ class ContractProject:
                 return package
         return None
 
+    def _is_local_package(self, module_name: str) -> bool:
+        parts = module_name.split(".")
+        return any(source_root.joinpath(*parts).is_dir() for source_root in self._source_roots())
+
     def _module_import_targets(self, module_name: str, path: Path) -> list[tuple[str, Path]]:
         targets: list[tuple[str, Path]] = []
         parts = module_name.split(".")
@@ -263,6 +289,8 @@ class ContractProject:
                 local_path = self._resolve_module(imported)
                 if local_path is not None:
                     pending.extend(self._module_import_targets(imported, local_path))
+                    continue
+                if self._is_local_package(imported):
                     continue
                 parent_module = imported.rpartition(".")[0]
                 if parent_module and self._resolve_module(parent_module) is not None:
