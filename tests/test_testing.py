@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from rubio_cli_kit.testing import CliSandbox
+from rubio_cli_kit.testing import CliSandbox, FakeHttpServer
 
 
 def _sandbox(tmp_path: Path, command_body: str) -> CliSandbox:
@@ -35,3 +35,12 @@ def test_cli_execution_has_an_overridable_timeout(tmp_path: Path) -> None:
 
     with pytest.raises(subprocess.TimeoutExpired):
         sandbox.run("example", timeout=0.01)
+
+
+def test_fake_http_server_rejects_unsupported_methods() -> None:
+    fake = FakeHttpServer()
+    try:
+        with pytest.raises(ValueError, match="unsupported HTTP method"):
+            fake.route("/resource", "ok", method="PUT")
+    finally:
+        fake.close()

@@ -370,6 +370,33 @@ class ContractProject:
         package_parts = current_module.split(".")
         if current_path.name != "__init__.py":
             package_parts = package_parts[:-1]
+
+        def dynamic_import_target(node: ast.Call) -> str:
+            if (
+                not node.args
+                or not isinstance(node.args[0], ast.Constant)
+                or not isinstance(node.args[0].value, str)
+            ):
+                return "<dynamic import>"
+            target = node.args[0].value
+            if not target:
+                return "<dynamic import>"
+            if not target.startswith("."):
+                return target
+            if len(node.args) < 2:
+                return "<dynamic import>"
+            package_arg = node.args[1]
+            if isinstance(package_arg, ast.Name) and package_arg.id == "__package__":
+                package = ".".join(package_parts)
+            elif isinstance(package_arg, ast.Constant) and isinstance(package_arg.value, str):
+                package = package_arg.value
+            else:
+                return "<dynamic import>"
+            try:
+                return importlib.util.resolve_name(target, package)
+            except ImportError:
+                return "<dynamic import>"
+
         for node in nodes:
             if isinstance(node, ast.Import):
                 imports.update(alias.name for alias in node.names)
@@ -395,13 +422,5 @@ class ContractProject:
                 continue
             if not is_dynamic_import_reference(node.func):
                 continue
-            if (
-                node.args
-                and isinstance(node.args[0], ast.Constant)
-                and isinstance(node.args[0].value, str)
-            ):
-                target = node.args[0].value
-                imports.add(target if target and not target.startswith(".") else "<dynamic import>")
-            else:
-                imports.add("<dynamic import>")
+            imports.add(dynamic_import_target(node))
         return imports

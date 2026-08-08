@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 SYSTEM_PATH = ("/usr/bin", "/bin", "/usr/sbin", "/sbin")
 DEFAULT_TIMEOUT_SECONDS = 30.0
+SUPPORTED_HTTP_METHODS = frozenset({"GET", "POST"})
 
 
 def _join(root: Path, parts: tuple[str, ...]) -> Path:
@@ -210,9 +211,15 @@ class FakeHttpServer:
         status: int = 200,
         headers: Mapping[str, str] | None = None,
     ) -> str:
+        normalized_method = method.upper()
+        if normalized_method not in SUPPORTED_HTTP_METHODS:
+            supported = ", ".join(sorted(SUPPORTED_HTTP_METHODS))
+            raise ValueError(
+                f"unsupported HTTP method {normalized_method!r}; expected one of: {supported}"
+            )
         normalized = path if path.startswith("/") else f"/{path}"
         payload = body.encode() if isinstance(body, str) else body
-        self._routes[(method.upper(), normalized)] = HttpResponse(status, payload, headers or {})
+        self._routes[(normalized_method, normalized)] = HttpResponse(status, payload, headers or {})
         return self.url(normalized)
 
     @property
