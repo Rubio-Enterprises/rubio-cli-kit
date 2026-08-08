@@ -131,6 +131,30 @@ class ContractProject:
             "the kit's transitive dependency is not the consumer contract"
         )
 
+    def assert_command_import_ownership(self, command_name: str) -> None:
+        target = self.manifest.scripts[command_name]
+        module_name = target.partition(":")[0]
+        entry_path = self._resolve_module(module_name)
+        assert entry_path is not None, (
+            f"cannot resolve command entry point module {module_name!r} "
+            "under src/ or the project root"
+        )
+        tree = ast.parse(entry_path.read_text(), filename=str(entry_path))
+        imports: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imports.update(alias.name.partition(".")[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                imports.add(node.module.partition(".")[0])
+        assert "typer" in imports, (
+            f"non-hook command {command_name!r} must import typer directly in {module_name}"
+        )
+        forbidden = sorted(imports & {"rich", "structlog"})
+        assert not forbidden, (
+            f"non-hook command {command_name!r} must not import {', '.join(forbidden)} directly; "
+            "use rubio-cli-kit helpers"
+        )
+
     def _catalog_paths(self) -> tuple[Path, ...]:
         source = self.root / "src"
         if not source.is_dir():

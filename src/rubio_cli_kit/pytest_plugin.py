@@ -109,7 +109,7 @@ class ContractFile(pytest.File):
             catalog = project.load_catalog()
             contracts = project.load_contracts()
         # Consumer modules can fail arbitrarily; report that as a contract test.
-        except Exception as error:
+        except (Exception, SystemExit) as error:
             yield _function(
                 self,
                 name="contract:configuration:valid",
@@ -129,16 +129,25 @@ class ContractFile(pytest.File):
         yield _function(self, name="contract:commands:covered", call=coverage)
 
         for command in catalog.commands:
-            if not command.hook:
+            if command.hook:
+
+                def hook_stdlib_only(command_name: str = command.name) -> None:
+                    project.assert_hook_stdlib_only(command_name)
+
+                yield _function(
+                    self,
+                    name=f"contract:{command.name}:stdlib-only",
+                    call=hook_stdlib_only,
+                )
                 continue
 
-            def hook_stdlib_only(command_name: str = command.name) -> None:
-                project.assert_hook_stdlib_only(command_name)
+            def command_import_ownership(command_name: str = command.name) -> None:
+                project.assert_command_import_ownership(command_name)
 
             yield _function(
                 self,
-                name=f"contract:{command.name}:stdlib-only",
-                call=hook_stdlib_only,
+                name=f"contract:{command.name}:import-ownership",
+                call=command_import_ownership,
             )
 
         checks = (
@@ -188,7 +197,7 @@ def pytest_collection_modifyitems(
             return
         collected = list(collector.collect())
     # Collection failures must become visible test failures, not INTERNALERRORs.
-    except Exception as error:
+    except (Exception, SystemExit) as error:
         items.append(
             _function(
                 collector,

@@ -124,7 +124,8 @@ XDG roots, and hermetic PATH. They enforce external behavior only:
 - usage errors at exit 2 and runtime errors at exit 1, with clean stdout;
 - a parseable, chatter-free JSON value when JSON mode is supported;
 - exact parity between `[project.scripts]`, catalog rows, and non-hook contract rows;
-- a direct `typer` declaration in the consumer manifest.
+- a direct `typer` declaration in the consumer manifest;
+- direct Typer imports in non-hook command modules, with Rich and structlog kept behind kit helpers.
 
 Catalog rows marked `hook = true` need no `CommandContract` row and may omit `purpose` / `use_when`.
 The harness recursively follows their project-local imports and rejects any dependency outside the

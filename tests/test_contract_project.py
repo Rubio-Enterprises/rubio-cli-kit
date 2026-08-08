@@ -45,6 +45,27 @@ def test_consumer_must_declare_typer_directly(tmp_path: Path) -> None:
         project.assert_typer_declared()
 
 
+def test_non_hook_commands_must_import_typer_directly(tmp_path: Path) -> None:
+    project = _write_project(tmp_path, scripts=(("example", "example_tool.cli:app"),))
+
+    with pytest.raises(AssertionError, match="import typer directly"):
+        project.assert_command_import_ownership("example")
+
+    (tmp_path / "src" / "example_tool" / "cli.py").write_text("from typer import Typer\n")
+
+    project.assert_command_import_ownership("example")
+
+
+def test_non_hook_commands_must_not_import_rich_or_structlog(tmp_path: Path) -> None:
+    project = _write_project(tmp_path, scripts=(("example", "example_tool.cli:app"),))
+    (tmp_path / "src" / "example_tool" / "cli.py").write_text(
+        "import rich\nimport structlog\nimport typer\n"
+    )
+
+    with pytest.raises(AssertionError, match="must not import rich, structlog"):
+        project.assert_command_import_ownership("example")
+
+
 def test_catalog_requires_purpose_and_use_when_for_non_hooks(tmp_path: Path) -> None:
     project = _write_project(
         tmp_path,

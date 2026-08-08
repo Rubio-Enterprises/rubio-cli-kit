@@ -63,6 +63,7 @@ COMMANDS = (
     output = result.stdout.str()
     assert "contract:manifest:typer-declared" in output
     assert "contract:catalog:valid" in output
+    assert "contract:example:import-ownership" in output
     assert "contract:example:root-options" in output
     assert "contract:example:runtime-error" in output
 
@@ -152,6 +153,40 @@ use_when = "Use when an example is needed."
 
     result.assert_outcomes(passed=1, failed=1)
     assert "broken contract table" in result.stdout.str()
+    assert "INTERNALERROR" not in result.stderr.str()
+
+
+def test_plugin_reports_contract_table_system_exit_as_a_test_failure(
+    pytester: pytest.Pytester,
+) -> None:
+    pytester.makepyprojecttoml(
+        """[project]
+name = "example-tool"
+version = "1.2.3"
+dependencies = ["rubio-cli-kit", "typer>=0.26.8"]
+
+[project.scripts]
+example = "example_tool.cli:app"
+"""
+    )
+    pytester.makefile(
+        ".toml",
+        **{
+            "src/example_tool/catalog": """[[command]]
+name = "example"
+purpose = "Do the example thing."
+use_when = "Use when an example is needed."
+"""
+        },
+    )
+    pytester.makepyfile(
+        **{"tests/contract_table": "raise SystemExit(2)\n"},
+    )
+
+    result = pytester.runpytest_subprocess("-q")
+
+    result.assert_outcomes(passed=1, failed=1)
+    assert "contract:configuration:valid" in result.stdout.str()
     assert "INTERNALERROR" not in result.stderr.str()
 
 
