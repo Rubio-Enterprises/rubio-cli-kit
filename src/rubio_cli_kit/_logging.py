@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import structlog
 
@@ -22,8 +22,13 @@ class _LogState:
 _STATE = _LogState()
 
 
-def configure(*, verbose: bool | None = None, json_output: bool | None = None) -> None:
-    """Configure logging, retaining the current value of omitted options."""
+def configure(
+    *,
+    verbose: bool | None = None,
+    json_output: bool | None = None,
+) -> _LogState:
+    """Configure logging and return the previous configuration."""
+    previous = replace(_STATE)
     if verbose is not None:
         _STATE.verbose = verbose
     if json_output is not None:
@@ -43,6 +48,7 @@ def configure(*, verbose: bool | None = None, json_output: bool | None = None) -
         logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
         cache_logger_on_first_use=False,
     )
+    return previous
 
 
 def get_logger(name: str) -> structlog.typing.FilteringBoundLogger:

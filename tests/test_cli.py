@@ -397,3 +397,64 @@ def test_nested_invocation_restores_the_outer_app_identity() -> None:
 
     assert result.exit_code == 1
     assert Text.from_ansi(result.stderr).plain == "outer: after inner\n"
+
+
+def test_nested_version_exit_restores_the_outer_app_identity() -> None:
+    inner = _make_app_from_package(make_app, name="inner")
+    inner_command = get_command(inner)
+    outer = _make_app_from_package(make_app, name="outer")
+
+    @outer.command()
+    def run() -> None:
+        inner_command.main(args=["--version"], prog_name="inner", standalone_mode=False)
+        fail("after inner version")
+
+    result = runner.invoke(outer, ["run"])
+
+    assert result.exit_code == 1
+    assert Text.from_ansi(result.stderr).plain == "outer: after inner version\n"
+
+
+def test_nested_invocation_restores_outer_verbose_logging() -> None:
+    inner = _make_app_from_package(make_app, name="inner")
+
+    @inner.command()
+    def done() -> None:
+        pass
+
+    inner_command = get_command(inner)
+    outer = _make_app_from_package(make_app, name="outer")
+
+    @outer.command()
+    def run() -> None:
+        inner_command.main(args=["done"], prog_name="inner", standalone_mode=False)
+        _logging.get_logger("outer").debug("after inner")
+
+    result = runner.invoke(outer, ["--verbose", "run"])
+
+    assert result.exit_code == 0
+    assert "after inner" in Text.from_ansi(result.stderr).plain
+
+
+def test_distribution_name_rejects_ambiguous_package_mapping(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        importlib.metadata,
+        "packages_distributions",
+        lambda: {"acme": ["acme-core", "acme-cli"]},
+    )
+
+    with pytest.raises(RuntimeError, match="multiple distributions"):
+        _make_app_from_package(make_app, package="acme.commands")
+
+
+def test_single_command_rejects_reserved_option_collisions() -> None:
+    app = _make_app_from_package(make_single_command_app)
+
+    @app.command()
+    def main(verbose: Annotated[bool, typer.Option("--verbose")] = False) -> None:
+        typer.echo(verbose)
+
+    with pytest.raises(TypeError, match="reserved root options"):
+        get_command(app)

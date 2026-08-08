@@ -48,3 +48,12 @@ def test_render_table_returns_unwrapped_plain_text() -> None:
     )
 
     assert table == "NAME   STATE\nalpha  ready\nbeta   blocked"
+
+
+def test_render_table_aligns_wide_terminal_characters() -> None:
+    table = _output.render_table(
+        [{"name": "猫", "state": "ready"}, {"name": "alpha", "state": "blocked"}],
+        [("name", "NAME"), ("state", "STATE")],
+    )
+
+    assert table == "NAME   STATE\n猫     ready\nalpha  blocked"

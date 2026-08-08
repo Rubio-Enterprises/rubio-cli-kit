@@ -10,6 +10,7 @@ import json
 from typing import TYPE_CHECKING
 
 import typer
+from rich.cells import cell_len
 from rich.console import Console
 
 if TYPE_CHECKING:
@@ -48,13 +49,16 @@ def render_table(
     columns: Sequence[tuple[str, str]],
 ) -> str:
     """Align rows into a plain-text table suitable for stdout."""
-    widths = {key: len(header) for key, header in columns}
+    widths = {key: cell_len(header) for key, header in columns}
     for row in rows:
         for key, _ in columns:
-            widths[key] = max(widths[key], len(row.get(key, "")))
-    lines = ["  ".join(f"{header:<{widths[key]}}" for key, header in columns).rstrip()]
+            widths[key] = max(widths[key], cell_len(row.get(key, "")))
+
+    def pad(value: str, width: int) -> str:
+        return value + " " * (width - cell_len(value))
+
+    lines = ["  ".join(pad(header, widths[key]) for key, header in columns).rstrip()]
     lines.extend(
-        "  ".join(f"{row.get(key, ''):<{widths[key]}}" for key, _ in columns).rstrip()
-        for row in rows
+        "  ".join(pad(row.get(key, ""), widths[key]) for key, _ in columns).rstrip() for row in rows
     )
     return "\n".join(lines)

@@ -54,7 +54,26 @@ def _importing_distribution_name() -> str:
         raise RuntimeError("CLI apps must be constructed from an importable package")
     top_level_package = package.partition(".")[0]
     distributions = importlib.metadata.packages_distributions().get(top_level_package)
-    return distributions[0] if distributions else top_level_package
+    if not distributions:
+        return top_level_package
+    if len(distributions) > 1:
+        candidates = ", ".join(sorted(distributions))
+        raise RuntimeError(
+            f"import package {top_level_package!r} is provided by multiple distributions: "
+            f"{candidates}"
+        )
+    return distributions[0]
+
+
+def _set_app_identity(*, name: str, distribution: str) -> Callable[[], None]:
+    prog_token = _PROG.set(name)
+    dist_token = _DIST.set(distribution)
+
+    def reset() -> None:
+        _DIST.reset(dist_token)
+        _PROG.reset(prog_token)
+
+    return reset
 
 
 def _bind_app_identity(
@@ -63,14 +82,17 @@ def _bind_app_identity(
     name: str,
     distribution: str,
 ) -> None:
-    prog_token = _PROG.set(name)
-    dist_token = _DIST.set(distribution)
+    ctx.call_on_close(_set_app_identity(name=name, distribution=distribution))
 
-    def reset() -> None:
-        _DIST.reset(dist_token)
-        _PROG.reset(prog_token)
 
-    ctx.call_on_close(reset)
+def _bind_logging(ctx: typer.Context, *, verbose: bool) -> None:
+    previous = _logging.configure(verbose=verbose)
+    ctx.call_on_close(
+        lambda: _logging.configure(
+            verbose=previous.verbose,
+            json_output=previous.json_output,
+        )
+    )
 
 
 def _print_version(requested: bool, *, distribution: str | None = None) -> None:
@@ -120,7 +142,6 @@ def make_app(
     def print_app_version(ctx: typer.Context, requested: bool) -> None:
         if ctx.resilient_parsing:
             return
-        _bind_app_identity(ctx, name=name, distribution=distribution)
         _print_version(requested, distribution=distribution)
 
     @app.callback(invoke_without_command=default_command is not None)
@@ -141,7 +162,7 @@ def make_app(
     ) -> None:
         del version
         _bind_app_identity(ctx, name=name, distribution=distribution)
-        _logging.configure(verbose=verbose)
+        _bind_logging(ctx, verbose=verbose)
         if default_command is None or ctx.invoked_subcommand is not None:
             return
         lookup = getattr(ctx.command, "get_command", None)
@@ -180,6 +201,15 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
     class SingleCommand(TyperCommand):
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             super().__init__(*args, **kwargs)
+            reserved_options = {"--verbose", "--version"}
+            declared_options = {
+                option for param in self.params for option in getattr(param, "opts", ())
+            }
+            collisions = sorted(reserved_options & declared_options)
+            if collisions:
+                raise TypeError(
+                    "single-command apps have reserved root options: " + ", ".join(collisions)
+                )
             self.params.extend(
                 [
                     TyperOption(
@@ -206,10 +236,29 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
             ctx: typer.Context,
             args: list[str],
         ) -> list[str]:
-            if not ctx.resilient_parsing:
-                _bind_app_identity(ctx, name=name, distribution=distribution)
-                _logging.configure(verbose=False)
-            return super().parse_args(ctx, args)
+            if ctx.resilient_parsing:
+                return super().parse_args(ctx, args)
+
+            reset_identity = _set_app_identity(name=name, distribution=distribution)
+            previous_logging = _logging.configure(verbose=False)
+            try:
+                remaining = super().parse_args(ctx, args)
+            except Exception:
+                reset_identity()
+                _logging.configure(
+                    verbose=previous_logging.verbose,
+                    json_output=previous_logging.json_output,
+                )
+                raise
+
+            ctx.call_on_close(reset_identity)
+            ctx.call_on_close(
+                lambda: _logging.configure(
+                    verbose=previous_logging.verbose,
+                    json_output=previous_logging.json_output,
+                )
+            )
+            return remaining
 
     return SingleCommand
 
