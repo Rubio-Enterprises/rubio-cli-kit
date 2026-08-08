@@ -144,6 +144,7 @@ class CliSandbox:
             input=input_text,
             capture_output=True,
             text=True,
+            cwd=self.home,
             env=self.environ(path_prepend=path_prepend, env_extra=env_extra),
             check=False,
             timeout=timeout,

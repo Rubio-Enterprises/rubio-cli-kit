@@ -44,6 +44,16 @@ def test_recording_executable_preserves_argument_boundaries(tmp_path: Path) -> N
     assert argv_log.read_bytes() == b"2\x00a b\x00c\x002\x00a\x00b c\x00"
 
 
+def test_cli_execution_runs_from_the_throwaway_home(tmp_path: Path) -> None:
+    sandbox = _sandbox(tmp_path, "pwd\ntouch relative-output")
+
+    result = sandbox.run("example")
+
+    assert result.returncode == 0
+    assert result.stdout == f"{sandbox.home}\n"
+    assert (sandbox.home / "relative-output").is_file()
+
+
 def test_cli_execution_has_an_overridable_timeout(tmp_path: Path) -> None:
     sandbox = _sandbox(tmp_path, "sleep 1")
 

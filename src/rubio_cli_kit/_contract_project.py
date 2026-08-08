@@ -396,13 +396,15 @@ class ContractProject:
             package_parts = package_parts[:-1]
 
         def dynamic_import_target(node: ast.Call) -> str:
+            name_args = list(node.args[:1])
+            name_args.extend(keyword.value for keyword in node.keywords if keyword.arg == "name")
             if (
-                not node.args
-                or not isinstance(node.args[0], ast.Constant)
-                or not isinstance(node.args[0].value, str)
+                len(name_args) != 1
+                or not isinstance(name_args[0], ast.Constant)
+                or not isinstance(name_args[0].value, str)
             ):
                 return "<dynamic import>"
-            target = node.args[0].value
+            target = name_args[0].value
             if not target:
                 return "<dynamic import>"
             if not target.startswith("."):
