@@ -10,9 +10,9 @@ from __future__ import annotations
 import importlib.metadata
 import inspect
 from collections.abc import Callable
-from dataclasses import dataclass
+from contextvars import ContextVar
 from enum import IntEnum
-from typing import Any, NoReturn
+from typing import Any, NoReturn, cast
 
 import typer
 from typer.core import TyperCommand, TyperOption
@@ -28,18 +28,13 @@ class ExitCode(IntEnum):
     USAGE = 2
 
 
-@dataclass
-class _CliState:
-    prog: str = "command"
-    dist: str = ""
-
-
-_STATE = _CliState()
+_PROG = ContextVar("rubio_cli_kit_prog", default="command")
+_DIST = ContextVar("rubio_cli_kit_dist", default="rubio-cli-kit")
 
 
 def prog_name() -> str:
     """Return the console-script name used for error prefixes."""
-    return _STATE.prog
+    return _PROG.get()
 
 
 def fail(message: str, *, code: ExitCode = ExitCode.RUNTIME) -> NoReturn:
@@ -60,20 +55,20 @@ def _importing_distribution_name() -> str:
     return package.partition(".")[0]
 
 
-def _print_version(requested: bool) -> None:
+def _bind_app_identity(*, name: str, distribution: str) -> None:
+    _PROG.set(name)
+    _DIST.set(distribution)
+
+
+def _print_version(requested: bool, *, distribution: str | None = None) -> None:
     if requested:
-        _output.emit_text(importlib.metadata.version(_STATE.dist))
+        _output.emit_text(importlib.metadata.version(distribution or _DIST.get()))
         raise typer.Exit(ExitCode.OK)
 
 
 def print_version(requested: bool) -> None:
-    """Print the importing distribution's version for an eager Typer option."""
+    """Print the current distribution's version for an eager Typer option."""
     _print_version(requested)
-
-
-def _set_app_state(*, name: str, distribution: str) -> None:
-    _STATE.prog = name
-    _STATE.dist = distribution
 
 
 def make_app(
@@ -84,7 +79,6 @@ def make_app(
 ) -> typer.Typer:
     """Build a subcommand application with the complete shared root shape."""
     distribution = _importing_distribution_name()
-    _set_app_state(name=name, distribution=distribution)
     app = typer.Typer(
         name=name,
         help=help_text,
@@ -94,6 +88,10 @@ def make_app(
         pretty_exceptions_enable=False,
     )
 
+    def print_app_version(requested: bool) -> None:
+        _bind_app_identity(name=name, distribution=distribution)
+        _print_version(requested, distribution=distribution)
+
     @app.callback(invoke_without_command=default_command is not None)
     def _root(
         ctx: typer.Context,
@@ -101,7 +99,7 @@ def make_app(
             False,
             "--version",
             help="Print the package version and exit.",
-            callback=_print_version,
+            callback=print_app_version,
             is_eager=True,
         ),
         verbose: bool = typer.Option(
@@ -111,26 +109,33 @@ def make_app(
         ),
     ) -> None:
         del version
+        _bind_app_identity(name=name, distribution=distribution)
         _logging.configure(verbose=verbose)
         if default_command is None or ctx.invoked_subcommand is not None:
             return
         lookup = getattr(ctx.command, "get_command", None)
         command = lookup(ctx, default_command) if lookup is not None else None
-        callback = getattr(command, "callback", None)
-        if callback is None:
+        if command is None:
             raise RuntimeError(f"default command is not registered: {default_command}")
-        ctx.invoke(callback)
+        make_context = getattr(command, "make_context", None)
+        invoke = getattr(command, "invoke", None)
+        if not callable(make_context) or not callable(invoke):
+            raise RuntimeError(f"default command cannot be invoked: {default_command}")
+        subcontext = cast("typer.Context", make_context(default_command, [], parent=ctx))
+        with subcontext:
+            invoke(subcontext)
 
     return app
 
 
-def _single_command_type(distribution: str) -> type[TyperCommand]:
+def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
     def version_callback(
         ctx: typer.Context,
         _param: Any,
         requested: bool,
     ) -> None:
         if requested and not ctx.resilient_parsing:
+            _bind_app_identity(name=name, distribution=distribution)
             _output.emit_text(importlib.metadata.version(distribution))
             ctx.exit(ExitCode.OK)
 
@@ -140,6 +145,7 @@ def _single_command_type(distribution: str) -> type[TyperCommand]:
         verbose: bool,
     ) -> None:
         if not ctx.resilient_parsing:
+            _bind_app_identity(name=name, distribution=distribution)
             _logging.configure(verbose=verbose)
 
     class SingleCommand(TyperCommand):
@@ -172,9 +178,16 @@ CommandFunction = Callable[..., Any]
 
 
 class _SingleCommandTyper(typer.Typer):
-    def __init__(self, *, command_type: type[TyperCommand], **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        command_type: type[TyperCommand],
+        help_text: str,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self._command_type = command_type
+        self._help_text = help_text
 
     def command(  # type: ignore[override]
         self,
@@ -182,15 +195,16 @@ class _SingleCommandTyper(typer.Typer):
         **kwargs: Any,
     ) -> Callable[[CommandFunction], CommandFunction]:
         kwargs.setdefault("cls", self._command_type)
+        kwargs.setdefault("help", self._help_text)
         return super().command(name, **kwargs)
 
 
 def make_single_command_app(*, name: str, help_text: str) -> typer.Typer:
     """Build a root-argument command with the complete shared root shape."""
     distribution = _importing_distribution_name()
-    _set_app_state(name=name, distribution=distribution)
     return _SingleCommandTyper(
-        command_type=_single_command_type(distribution),
+        command_type=_single_command_type(name=name, distribution=distribution),
+        help_text=help_text,
         name=name,
         help=help_text,
         no_args_is_help=True,

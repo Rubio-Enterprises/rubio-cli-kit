@@ -18,3 +18,12 @@ def test_xdg_dir_falls_back_below_home(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("HOME", "/home/example")
 
     assert xdg_dir("XDG_STATE_HOME", ".local", "state") == Path("/home/example/.local/state")
+
+
+def test_xdg_dir_ignores_relative_environment_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("XDG_STATE_HOME", "relative/state")
+    monkeypatch.setenv("HOME", "/home/example")
+
+    assert xdg_dir("XDG_STATE_HOME", ".local", "state") == Path("/home/example/.local/state")

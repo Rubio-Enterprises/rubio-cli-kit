@@ -11,19 +11,30 @@ from rich.text import Text
 from typer.testing import CliRunner
 
 from rubio_cli_kit import _logging
-from rubio_cli_kit._cli import make_app, make_single_command_app
+from rubio_cli_kit._cli import fail, make_app, make_single_command_app
 
 runner = CliRunner()
+
+
+def _uppercase(value: str) -> str:
+    return value.upper()
 
 
 def _make_app_from_package(
     factory: Callable[..., typer.Typer],
     *,
     package: str = "rubio_cli_kit.examples",
+    name: str = "example",
+    **factory_kwargs: object,
 ) -> typer.Typer:
-    namespace = {"__package__": package, "factory": factory}
+    namespace = {
+        "__package__": package,
+        "factory": factory,
+        "factory_kwargs": factory_kwargs,
+        "name": name,
+    }
     exec(
-        'app = factory(name="example", help_text="Example command.")',
+        'app = factory(name=name, help_text="Example command.", **factory_kwargs)',
         namespace,
     )
     return cast("typer.Typer", namespace["app"])
@@ -56,6 +67,7 @@ def test_subcommand_shape_has_complete_root_options_and_logging(
     help_result = runner.invoke(app, ["--help"])
     assert help_result.exit_code == 0
     help_text = Text.from_ansi(help_result.stdout).plain
+    assert "Example command." in help_text
     for option in ("-h", "--help", "--version", "--verbose"):
         assert option in help_text
 
@@ -85,6 +97,7 @@ def test_single_command_shape_has_complete_root_options_and_logging(
     help_result = runner.invoke(app, ["--help"])
     assert help_result.exit_code == 0
     help_text = Text.from_ansi(help_result.stdout).plain
+    assert "Example command." in help_text
     for option in ("-h", "--help", "--version", "--verbose"):
         assert option in help_text
 
@@ -128,3 +141,61 @@ def test_distribution_name_comes_from_importing_package(
 def test_factories_do_not_accept_distribution_metadata() -> None:
     for factory in (make_app, make_single_command_app):
         assert "dist_name" not in inspect.signature(factory).parameters
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [make_app, make_single_command_app],
+    ids=["subcommand", "single-command"],
+)
+def test_apps_keep_their_own_distribution_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+    factory: Callable[..., typer.Typer],
+) -> None:
+    versions = {"first_tool": "1.0.0", "second_tool": "2.0.0"}
+    monkeypatch.setattr(importlib.metadata, "version", versions.__getitem__)
+    first = _make_app_from_package(factory, package="first_tool.commands")
+    second = _make_app_from_package(factory, package="second_tool.commands")
+
+    @first.command()
+    def first_command() -> None:
+        pass
+
+    @second.command()
+    def second_command() -> None:
+        pass
+
+    result = runner.invoke(first, ["--version"])
+
+    assert result.exit_code == 0
+    assert result.stdout == "1.0.0\n"
+
+
+def test_fail_prefix_uses_the_invoked_app_name() -> None:
+    first = _make_app_from_package(make_app, name="first")
+
+    @first.command()
+    def broken() -> None:
+        fail("broken")
+
+    _make_app_from_package(make_app, name="second")
+
+    result = runner.invoke(first, ["broken"])
+
+    assert result.exit_code == 1
+    assert Text.from_ansi(result.stderr).plain == "first: broken\n"
+
+
+def test_default_command_runs_option_callbacks() -> None:
+    app = _make_app_from_package(make_app, default_command="status")
+
+    @app.command()
+    def status(
+        mode: Annotated[str, typer.Option("--mode", callback=_uppercase)] = "human",
+    ) -> None:
+        typer.echo(mode)
+
+    result = runner.invoke(app, [])
+
+    assert result.exit_code == 0, (result.stdout, result.stderr, result.exception)
+    assert result.stdout == "HUMAN\n"
