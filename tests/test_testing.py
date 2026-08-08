@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
+import signal
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -17,6 +20,14 @@ def _sandbox(tmp_path: Path, command_body: str) -> CliSandbox:
     home = tmp_path / "home"
     home.mkdir()
     return CliSandbox(home=home, scripts_dir=scripts_dir)
+
+
+def _process_exists(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    return True
 
 
 def test_fake_path_is_added_to_the_cli_environment(tmp_path: Path) -> None:
@@ -59,6 +70,26 @@ def test_cli_execution_has_an_overridable_timeout(tmp_path: Path) -> None:
 
     with pytest.raises(subprocess.TimeoutExpired):
         sandbox.run("example", timeout=0.01)
+
+
+def test_cli_timeout_terminates_spawned_child_processes(tmp_path: Path) -> None:
+    sandbox = _sandbox(
+        tmp_path,
+        'sleep 30 &\necho "$!" > child.pid\nwait',
+    )
+
+    with pytest.raises(subprocess.TimeoutExpired):
+        sandbox.run("example", timeout=0.5)
+
+    child_pid = int((sandbox.home / "child.pid").read_text())
+    deadline = time.monotonic() + 1
+    while _process_exists(child_pid) and time.monotonic() < deadline:
+        time.sleep(0.01)
+    try:
+        assert not _process_exists(child_pid)
+    finally:
+        if _process_exists(child_pid):
+            os.kill(child_pid, signal.SIGKILL)
 
 
 def test_fake_http_server_rejects_unsupported_methods() -> None:

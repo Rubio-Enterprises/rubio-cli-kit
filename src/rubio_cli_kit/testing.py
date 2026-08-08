@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shlex
+import signal
 import stat
 import subprocess
 import threading
@@ -139,16 +140,34 @@ class CliSandbox:
         input_text: str | None = None,
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
     ) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(  # noqa: S603
-            [str(self.scripts_dir / command), *args],
-            input=input_text,
-            capture_output=True,
+        argv = [str(self.scripts_dir / command), *args]
+        process = subprocess.Popen(  # noqa: S603
+            argv,
+            stdin=subprocess.PIPE if input_text is not None else None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
             cwd=self.home,
             env=self.environ(path_prepend=path_prepend, env_extra=env_extra),
-            check=False,
-            timeout=timeout,
+            start_new_session=True,
         )
+        try:
+            stdout, stderr = process.communicate(input=input_text, timeout=timeout)
+        except subprocess.TimeoutExpired as error:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                if process.poll() is None:
+                    raise
+            stdout, stderr = process.communicate()
+            raise subprocess.TimeoutExpired(
+                error.cmd,
+                error.timeout,
+                output=stdout,
+                stderr=stderr,
+            ) from None
+        assert process.returncode is not None
+        return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
 
 
 @dataclass(frozen=True)
