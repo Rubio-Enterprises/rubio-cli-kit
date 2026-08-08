@@ -1,0 +1,22 @@
+[project]
+name = "rubio-cli-kit"
+version = "1.0.0"
+description = "Shared CLI-contract helpers and pytest11 contract harness for the Rubio-Enterprises fleet's per-tool CLI repos"
+requires-python = ">=3.14.6"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "pyright>=1.1.385",
+  "ruff>=0.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"

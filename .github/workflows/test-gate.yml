@@ -1,0 +1,67 @@
+name: test-gate
+# Repository-local test gate (standards ADR 0020). This file carries ONLY the
+# canonical non-E2E test execution plus the aggregate that publishes the
+# required `test-gate` status context. Lint / typecheck / hook / secret-scan
+# jobs stay in standards.yml and the injected org governance workflows.
+"on":
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  canonical-tests:
+    name: canonical tests
+    runs-on: ${{ fromJSON(vars.RUNNER_GLUE || '["ubuntu-slim"]') }}
+    outputs:
+      tests_ran: ${{ steps.test.outputs.tests_ran }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1 # v8.3.1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.6"
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4
+      - id: test
+        name: Run canonical non-E2E tests
+        env:
+          RUBIO_TEST_GATE_COUNT_OUTPUT: ${{ runner.temp }}/test-gate-count
+        run: |
+          set -euo pipefail
+          rm -f "$RUBIO_TEST_GATE_COUNT_OUTPUT"
+          mise run test
+          python3 - reports/unit "$RUBIO_TEST_GATE_COUNT_OUTPUT" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          reports = sorted(Path(sys.argv[1]).glob("*.xml"))
+          if not reports:
+              raise SystemExit("test-gate: no JUnit reports under reports/unit/")
+          count = 0
+          for report in reports:
+              tree = ET.parse(report)
+              count += sum(int(s.attrib.get("tests", "0")) for s in tree.iter("testsuite"))
+          Path(sys.argv[2]).write_text(f"{count}\n", encoding="utf-8")
+          PY
+          test -s "$RUBIO_TEST_GATE_COUNT_OUTPUT"
+          test "$(cat "$RUBIO_TEST_GATE_COUNT_OUTPUT")" -gt 0
+          echo "tests_ran=true" >> "$GITHUB_OUTPUT"
+
+  aggregate:
+    name: test-gate
+    if: ${{ always() }}
+    needs: [canonical-tests]
+    runs-on: ${{ fromJSON(vars.RUNNER_GLUE || '["ubuntu-slim"]') }}
+    env:
+      NEEDS_JSON: ${{ toJSON(needs) }}
+    steps:
+      - name: Require successful non-empty test execution
+        run: >-
+          jq -e 'length > 0 and all(.[]; .result == "success" and
+          .outputs.tests_ran == "true")' <<<"$NEEDS_JSON"
