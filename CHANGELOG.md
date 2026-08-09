@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.1.0...v1.2.0) (2026-08-09)
+
+
+### Features
+
+* ship cli contract harness ([#10](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/10)) ([c505711](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/c505711a0dcb929db7952a1599b566cc5286064e))
+
 ## [1.1.0](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.0.0...v1.1.0) (2026-08-08)
 
 
