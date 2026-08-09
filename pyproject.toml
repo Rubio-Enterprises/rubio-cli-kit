@@ -9,6 +9,9 @@ dependencies = [
   "typer>=0.26.8",
 ]
 
+[project.entry-points.pytest11]
+rubio-cli-kit = "rubio_cli_kit.pytest_plugin"
+
 [dependency-groups]
 dev = [
   "pytest>=9.1.1",
