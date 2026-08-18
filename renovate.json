@@ -1,4 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>Rubio-Enterprises/.github"]
+  "extends": ["github>Rubio-Enterprises/.github"],
+  "packageRules": [
+    {
+      "description": "Pin only the consumer-owned test gate to the repository's 3.14.6 support floor",
+      "matchPackageNames": ["python"],
+      "matchFileNames": [".github/workflows/test-gate.yml"],
+      "enabled": false
+    }
+  ]
 }
