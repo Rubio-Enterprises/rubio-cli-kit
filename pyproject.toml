@@ -2,7 +2,7 @@
 name = "rubio-cli-kit"
 version = "1.2.1"
 description = "Shared CLI-contract helpers and pytest11 contract harness for the Rubio-Enterprises fleet's per-tool CLI repos"
-requires-python = ">=3.14.6"
+requires-python = ">=3.14.7"
 dependencies = [
   "rich>=15.0.0",
   "structlog>=26.1.0",
