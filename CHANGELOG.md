@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.1...v1.2.2) (2026-08-18)
+
+
+### Bug Fixes
+
+* keep python support floor at 3.14.6 ([#25](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/25)) ([2bb2177](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/2bb217781d55e5306263ac2175b50fa1f74deb7b))
+
 ## [1.2.1](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.0...v1.2.1) (2026-08-09)
 
 
