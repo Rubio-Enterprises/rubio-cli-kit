@@ -3,9 +3,13 @@
   "extends": ["github>Rubio-Enterprises/.github"],
   "packageRules": [
     {
-      "description": "Pin only the consumer-owned test gate to the repository's 3.14.6 support floor",
-      "matchPackageNames": ["python"],
-      "matchFileNames": [".github/workflows/test-gate.yml"],
+      "description": "Keep the repository-owned Python support-floor sources pinned to 3.14.6",
+      "matchDepNames": ["python"],
+      "matchFileNames": [
+        ".github/workflows/test-gate.yml",
+        ".tool-versions",
+        "pyproject.toml"
+      ],
       "enabled": false
     }
   ]
