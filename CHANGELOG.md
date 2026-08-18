@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.2...v1.2.3) (2026-08-18)
+
+
+### Bug Fixes
+
+* scope python floor updates by dependency ([#28](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/28)) ([af79ae7](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/af79ae7ffa8066dbb4ee2b6c965e15dcc3f53cf3))
+
 ## [1.2.2](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.1...v1.2.2) (2026-08-18)
 
 
