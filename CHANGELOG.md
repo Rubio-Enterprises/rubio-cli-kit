@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.3...v1.2.4) (2026-08-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency typer to &gt;=0.27.1 ([#15](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/15)) ([1de903b](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/1de903bc03bc5dd1a0f9e79c0114197098dc2ceb))
+
 ## [1.2.3](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.2...v1.2.3) (2026-08-18)
 
 
