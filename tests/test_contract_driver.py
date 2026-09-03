@@ -9,7 +9,7 @@ from rubio_cli_kit.testing import CliSandbox
 
 
 def _fake_command(scripts_dir: Path) -> None:
-    command = scripts_dir / "example"
+    command = scripts_dir / 'example'
     command.write_text(
         """#!/bin/sh
 case "$*" in
@@ -37,7 +37,7 @@ esac
 
 
 def _stateful_default_command(scripts_dir: Path) -> None:
-    command = scripts_dir / "stateful"
+    command = scripts_dir / 'stateful'
     command.write_text(
         """#!/bin/sh
 case "$*" in
@@ -58,22 +58,22 @@ esac
 
 def _contract() -> CommandContract:
     return CommandContract(
-        name="example",
-        help_paths=(("show",),),
-        json_args=("show", "--json"),
-        usage_error_args=("--bad",),
-        runtime_error_args=("explode",),
+        name='example',
+        help_paths=(('show',),),
+        json_args=('show', '--json'),
+        usage_error_args=('--bad',),
+        runtime_error_args=('explode',),
     )
 
 
 def test_driver_enforces_external_cli_contract(tmp_path: Path) -> None:
-    scripts_dir = tmp_path / "bin"
+    scripts_dir = tmp_path / 'bin'
     scripts_dir.mkdir()
     _fake_command(scripts_dir)
-    home = tmp_path / "home"
+    home = tmp_path / 'home'
     home.mkdir()
     sandbox = CliSandbox(home=home, scripts_dir=scripts_dir)
-    driver = ContractDriver(expected_version="1.2.3")
+    driver = ContractDriver(expected_version='1.2.3')
     contract = _contract()
 
     driver.assert_root_options(contract, sandbox)
@@ -85,37 +85,37 @@ def test_driver_enforces_external_cli_contract(tmp_path: Path) -> None:
 
 
 def test_default_invocations_use_identical_initial_state(tmp_path: Path) -> None:
-    scripts_dir = tmp_path / "bin"
+    scripts_dir = tmp_path / 'bin'
     scripts_dir.mkdir()
     _stateful_default_command(scripts_dir)
-    home = tmp_path / "home"
+    home = tmp_path / 'home'
     home.mkdir()
     sandbox = CliSandbox(home=home, scripts_dir=scripts_dir)
     contract = CommandContract(
-        name="stateful",
+        name='stateful',
         help_paths=(),
         json_args=None,
-        usage_error_args=("--bad",),
-        runtime_error_args=("explode",),
-        default_command="show",
+        usage_error_args=('--bad',),
+        runtime_error_args=('explode',),
+        default_command='show',
     )
 
-    ContractDriver(expected_version="1.2.3").assert_bare_invocation(contract, sandbox)
+    ContractDriver(expected_version='1.2.3').assert_bare_invocation(contract, sandbox)
 
 
 def test_driver_rejects_non_json_stdout(tmp_path: Path) -> None:
-    scripts_dir = tmp_path / "bin"
+    scripts_dir = tmp_path / 'bin'
     scripts_dir.mkdir()
     _fake_command(scripts_dir)
-    command = scripts_dir / "example"
-    command.write_text(command.read_text().replace('{"ok":true}', "not-json"))
-    home = tmp_path / "home"
+    command = scripts_dir / 'example'
+    command.write_text(command.read_text().replace('{"ok":true}', 'not-json'))
+    home = tmp_path / 'home'
     home.mkdir()
     sandbox = CliSandbox(home=home, scripts_dir=scripts_dir)
 
     try:
-        ContractDriver(expected_version="1.2.3").assert_json_wire(_contract(), sandbox)
+        ContractDriver(expected_version='1.2.3').assert_json_wire(_contract(), sandbox)
     except json.JSONDecodeError:
         pass
     else:
-        raise AssertionError("non-JSON stdout should fail the wire assertion")
+        raise AssertionError('non-JSON stdout should fail the wire assertion')

@@ -20,5 +20,5 @@ ignore = [
 "**/tests/**/*.py" = ["S", "T20"]
 
 [format]
-quote-style = "double"
+quote-style = "single"
 indent-style = "space"

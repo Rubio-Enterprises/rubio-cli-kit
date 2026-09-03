@@ -36,12 +36,12 @@ def status(message: str) -> None:
 
 def warn(message: str) -> None:
     """Write a human-facing warning to stderr."""
-    _stderr.print(f"warning: {message}", style="yellow")
+    _stderr.print(f'warning: {message}', style='yellow')
 
 
 def error(message: str) -> None:
     """Write a human-facing error to stderr."""
-    _stderr.print(message, style="bold red")
+    _stderr.print(message, style='bold red')
 
 
 def render_table(
@@ -52,13 +52,13 @@ def render_table(
     widths = {key: cell_len(header) for key, header in columns}
     for row in rows:
         for key, _ in columns:
-            widths[key] = max(widths[key], cell_len(row.get(key, "")))
+            widths[key] = max(widths[key], cell_len(row.get(key, '')))
 
     def pad(value: str, width: int) -> str:
-        return value + " " * (width - cell_len(value))
+        return value + ' ' * (width - cell_len(value))
 
-    lines = ["  ".join(pad(header, widths[key]) for key, header in columns).rstrip()]
+    lines = ['  '.join(pad(header, widths[key]) for key, header in columns).rstrip()]
     lines.extend(
-        "  ".join(pad(row.get(key, ""), widths[key]) for key, _ in columns).rstrip() for row in rows
+        '  '.join(pad(row.get(key, ''), widths[key]) for key, _ in columns).rstrip() for row in rows
     )
-    return "\n".join(lines)
+    return '\n'.join(lines)

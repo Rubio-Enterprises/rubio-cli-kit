@@ -16,9 +16,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
     from pathlib import Path
 
-SYSTEM_PATH = ("/usr/bin", "/bin", "/usr/sbin", "/sbin")
+SYSTEM_PATH = ('/usr/bin', '/bin', '/usr/sbin', '/sbin')
 DEFAULT_TIMEOUT_SECONDS = 30.0
-SUPPORTED_HTTP_METHODS = frozenset({"GET", "POST"})
+SUPPORTED_HTTP_METHODS = frozenset({'GET', 'POST'})
 
 
 def _join(root: Path, parts: tuple[str, ...]) -> Path:
@@ -37,7 +37,7 @@ class FakePath:
     def executable(self, name: str, body: str) -> Path:
         script = self.path / name
         self.path.mkdir(parents=True, exist_ok=True)
-        script.write_text(f"#!/bin/sh\n{body.rstrip()}\n")
+        script.write_text(f'#!/bin/sh\n{body.rstrip()}\n')
         script.chmod(script.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         return script
 
@@ -47,16 +47,16 @@ class FakePath:
         argv_log: Path,
         *,
         exit_code: int = 0,
-        stdout: str = "",
-        stderr: str = "",
+        stdout: str = '',
+        stderr: str = '',
     ) -> Path:
         lines = [f'printf "%s\\0" "$#" "$@" >> {shlex.quote(str(argv_log))}']
         if stdout:
-            lines.append(f"printf %s {shlex.quote(stdout)}")
+            lines.append(f'printf %s {shlex.quote(stdout)}')
         if stderr:
-            lines.append(f"printf %s {shlex.quote(stderr)} >&2")
-        lines.append(f"exit {exit_code}")
-        return self.executable(name, "\n".join(lines))
+            lines.append(f'printf %s {shlex.quote(stderr)} >&2')
+        lines.append(f'exit {exit_code}')
+        return self.executable(name, '\n'.join(lines))
 
 
 @dataclass
@@ -70,18 +70,18 @@ class CliSandbox:
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
 
     def xdg_config_path(self, *parts: str) -> Path:
-        return _join(self.home / ".config", parts)
+        return _join(self.home / '.config', parts)
 
     def xdg_data_path(self, *parts: str) -> Path:
-        return _join(self.home / ".local" / "share", parts)
+        return _join(self.home / '.local' / 'share', parts)
 
     def xdg_state_path(self, *parts: str) -> Path:
-        return _join(self.home / ".local" / "state", parts)
+        return _join(self.home / '.local' / 'state', parts)
 
     def xdg_cache_path(self, *parts: str) -> Path:
-        return _join(self.home / ".cache", parts)
+        return _join(self.home / '.cache', parts)
 
-    def fake_path(self, dirname: str = "fake-bin") -> FakePath:
+    def fake_path(self, dirname: str = 'fake-bin') -> FakePath:
         fake = FakePath(self.home / dirname)
         if fake.path not in self.path_prepend:
             self.path_prepend.append(fake.path)
@@ -104,8 +104,8 @@ class CliSandbox:
                 errors.append(exc)
         self.cleanup_callbacks.clear()
         if errors:
-            messages = "; ".join(str(error) for error in errors)
-            raise RuntimeError(f"CliSandbox cleanup failed: {messages}")
+            messages = '; '.join(str(error) for error in errors)
+            raise RuntimeError(f'CliSandbox cleanup failed: {messages}')
 
     def environ(
         self,
@@ -120,13 +120,13 @@ class CliSandbox:
             *SYSTEM_PATH,
         ]
         return {
-            "HOME": str(self.home),
-            "PATH": os.pathsep.join(path),
-            "XDG_CONFIG_HOME": str(self.xdg_config_path()),
-            "XDG_DATA_HOME": str(self.xdg_data_path()),
-            "XDG_STATE_HOME": str(self.xdg_state_path()),
-            "XDG_CACHE_HOME": str(self.xdg_cache_path()),
-            "NO_COLOR": "1",
+            'HOME': str(self.home),
+            'PATH': os.pathsep.join(path),
+            'XDG_CONFIG_HOME': str(self.xdg_config_path()),
+            'XDG_DATA_HOME': str(self.xdg_data_path()),
+            'XDG_STATE_HOME': str(self.xdg_state_path()),
+            'XDG_CACHE_HOME': str(self.xdg_cache_path()),
+            'NO_COLOR': '1',
             **self.env_extra,
             **(env_extra or {}),
         }
@@ -195,30 +195,30 @@ class FakeHttpServer:
         requests = self._requests
 
         def handle(handler: BaseHTTPRequestHandler, method: str) -> None:
-            length = int(handler.headers.get("Content-Length", "0") or "0")
-            body = handler.rfile.read(length) if length else b""
+            length = int(handler.headers.get('Content-Length', '0') or '0')
+            body = handler.rfile.read(length) if length else b''
             requests.append(HttpRequest(method, handler.path, body, dict(handler.headers.items())))
             response = routes.get((method, handler.path))
             if response is None:
-                response = HttpResponse(404, b"not found", {})
+                response = HttpResponse(404, b'not found', {})
             handler.send_response(response.status)
             for key, value in response.headers.items():
                 handler.send_header(key, value)
-            handler.send_header("Content-Length", str(len(response.body)))
+            handler.send_header('Content-Length', str(len(response.body)))
             handler.end_headers()
             handler.wfile.write(response.body)
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self) -> None:
-                handle(self, "GET")
+                handle(self, 'GET')
 
             def do_POST(self) -> None:
-                handle(self, "POST")
+                handle(self, 'POST')
 
             def log_message(self, format: str, *args: object) -> None:
                 del format, args
 
-        self._server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self._server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
         self._thread.start()
 
@@ -227,17 +227,17 @@ class FakeHttpServer:
         path: str,
         body: str | bytes,
         *,
-        method: str = "GET",
+        method: str = 'GET',
         status: int = 200,
         headers: Mapping[str, str] | None = None,
     ) -> str:
         normalized_method = method.upper()
         if normalized_method not in SUPPORTED_HTTP_METHODS:
-            supported = ", ".join(sorted(SUPPORTED_HTTP_METHODS))
+            supported = ', '.join(sorted(SUPPORTED_HTTP_METHODS))
             raise ValueError(
-                f"unsupported HTTP method {normalized_method!r}; expected one of: {supported}"
+                f'unsupported HTTP method {normalized_method!r}; expected one of: {supported}'
             )
-        normalized = path if path.startswith("/") else f"/{path}"
+        normalized = path if path.startswith('/') else f'/{path}'
         payload = body.encode() if isinstance(body, str) else body
         self._routes[(normalized_method, normalized)] = HttpResponse(status, payload, headers or {})
         return self.url(normalized)
@@ -246,9 +246,9 @@ class FakeHttpServer:
     def requests(self) -> tuple[HttpRequest, ...]:
         return tuple(self._requests)
 
-    def url(self, path: str = "/") -> str:
-        normalized = path if path.startswith("/") else f"/{path}"
-        return f"http://127.0.0.1:{self._server.server_port}{normalized}"
+    def url(self, path: str = '/') -> str:
+        normalized = path if path.startswith('/') else f'/{path}'
+        return f'http://127.0.0.1:{self._server.server_port}{normalized}'
 
     def close(self) -> None:
         self._server.shutdown()
