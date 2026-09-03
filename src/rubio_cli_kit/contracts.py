@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from rubio_cli_kit.testing import CliSandbox
 
-CommandSetup = Callable[["CliSandbox"], None]
+CommandSetup = Callable[['CliSandbox'], None]
 
 
 def _empty_setup(sandbox: CliSandbox) -> None:

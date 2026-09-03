@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def home(tmp_path: Path) -> Path:
     """Give each CLI test an empty throwaway HOME."""
-    path = tmp_path / "home"
+    path = tmp_path / 'home'
     path.mkdir()
     return path
 
@@ -65,7 +65,7 @@ def _function(
     name: str,
     call: Callable[..., None],
 ) -> pytest.Function:
-    call.__name__ = name.replace(":", "_").replace("-", "_")
+    call.__name__ = name.replace(':', '_').replace('-', '_')
     return pytest.Function.from_parent(parent, name=name, callobj=call)
 
 
@@ -78,8 +78,8 @@ def _failure(error: BaseException) -> Callable[[], None]:
 
 def _platform_check(contract: CommandContract, call: Callable[[CliSandbox], None]) -> Callable:
     def check(cli_env: CliSandbox) -> None:
-        if contract.darwin_only and sys.platform != "darwin":
-            pytest.skip(f"{contract.name} is darwin-only")
+        if contract.darwin_only and sys.platform != 'darwin':
+            pytest.skip(f'{contract.name} is darwin-only')
         call(cli_env)
 
     return check
@@ -95,7 +95,7 @@ class ContractFile(pytest.File):
             def no_catalog() -> None:
                 project.assert_kit_has_no_catalog()
 
-            yield _function(self, name="contract:kit:no-catalog", call=no_catalog)
+            yield _function(self, name='contract:kit:no-catalog', call=no_catalog)
             return
         if not project.is_consumer:
             return
@@ -103,7 +103,7 @@ class ContractFile(pytest.File):
         def typer_declared() -> None:
             project.assert_typer_declared()
 
-        yield _function(self, name="contract:manifest:typer-declared", call=typer_declared)
+        yield _function(self, name='contract:manifest:typer-declared', call=typer_declared)
 
         try:
             catalog = project.load_catalog()
@@ -112,7 +112,7 @@ class ContractFile(pytest.File):
         except (Exception, SystemExit) as error:
             yield _function(
                 self,
-                name="contract:configuration:valid",
+                name='contract:configuration:valid',
                 call=_failure(error),
             )
             return
@@ -120,13 +120,13 @@ class ContractFile(pytest.File):
         def catalog_valid() -> None:
             project.load_catalog()
 
-        yield _function(self, name="contract:catalog:valid", call=catalog_valid)
+        yield _function(self, name='contract:catalog:valid', call=catalog_valid)
 
         def coverage() -> None:
             contract_names = {contract.name for contract in contracts}
             project.assert_command_coverage(contract_names=contract_names)
 
-        yield _function(self, name="contract:commands:covered", call=coverage)
+        yield _function(self, name='contract:commands:covered', call=coverage)
 
         for command in catalog.commands:
             if command.hook:
@@ -136,7 +136,7 @@ class ContractFile(pytest.File):
 
                 yield _function(
                     self,
-                    name=f"contract:{command.name}:stdlib-only",
+                    name=f'contract:{command.name}:stdlib-only',
                     call=hook_stdlib_only,
                 )
                 continue
@@ -146,17 +146,17 @@ class ContractFile(pytest.File):
 
             yield _function(
                 self,
-                name=f"contract:{command.name}:import-ownership",
+                name=f'contract:{command.name}:import-ownership',
                 call=command_import_ownership,
             )
 
         checks = (
-            ("root-options", ContractDriver.assert_root_options),
-            ("help-paths", ContractDriver.assert_help_paths),
-            ("bare-invocation", ContractDriver.assert_bare_invocation),
-            ("json-wire", ContractDriver.assert_json_wire),
-            ("usage-error", ContractDriver.assert_usage_error),
-            ("runtime-error", ContractDriver.assert_runtime_error),
+            ('root-options', ContractDriver.assert_root_options),
+            ('help-paths', ContractDriver.assert_help_paths),
+            ('bare-invocation', ContractDriver.assert_bare_invocation),
+            ('json-wire', ContractDriver.assert_json_wire),
+            ('usage-error', ContractDriver.assert_usage_error),
+            ('runtime-error', ContractDriver.assert_runtime_error),
         )
         for contract in contracts:
             for suffix, assertion in checks:
@@ -176,7 +176,7 @@ class ContractFile(pytest.File):
 
                 yield _function(
                     self,
-                    name=f"contract:{contract.name}:{suffix}",
+                    name=f'contract:{contract.name}:{suffix}',
                     call=_platform_check(contract, run_check),
                 )
 
@@ -188,7 +188,7 @@ def pytest_collection_modifyitems(
     items: list[pytest.Item],
 ) -> None:
     """Append the synthetic contract independently of pytest's configured test paths."""
-    manifest = Path(config.rootpath) / "pyproject.toml"
+    manifest = Path(config.rootpath) / 'pyproject.toml'
     if not manifest.is_file():
         return
     collector = ContractFile.from_parent(session, path=manifest)
@@ -201,7 +201,7 @@ def pytest_collection_modifyitems(
         items.append(
             _function(
                 collector,
-                name="contract:configuration:valid",
+                name='contract:configuration:valid',
                 call=_failure(error),
             )
         )
