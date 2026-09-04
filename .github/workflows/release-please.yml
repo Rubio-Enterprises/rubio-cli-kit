@@ -41,6 +41,47 @@ jobs:
           # at the repo root — both are Copier-synced into every consumer repo.
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      - name: Check out release PR
+        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ fromJSON(steps.release.outputs.prs)[0].headBranchName }}
+      - name: Set up release PR tools
+        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
+        with:
+          install: false
+      - name: Refresh Python release lockfile
+        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
+        env:
+          RELEASE_PRS: ${{ steps.release.outputs.prs }}
+        run: |
+          set -euo pipefail
+          # An empty branch means the prs output schema drifted; the checkout
+          # above then silently landed on the triggering commit, where the
+          # lock is already consistent — refresh MUST fail loudly, not no-op
+          # (v0.1.10 of aw-gateway shipped a stale lock exactly this way).
+          # GitHub Actions expands env values even for if-skipped steps, so
+          # env-level fromJSON is forbidden (aw-gateway run 32876379705).
+          RELEASE_BRANCH=$(jq -r 'first.headBranchName // empty' <<<"${RELEASE_PRS:-[]}")
+          if [ -z "$RELEASE_BRANCH" ]; then
+            echo "::error::could not resolve the release PR branch from the release-please prs output"
+            exit 1
+          fi
+          mise use --global pipx@1.16.7 uv@0.12.5
+          mise install
+          uv lock
+          if git diff --quiet -- uv.lock; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git commit -m "chore: refresh uv lock"
+          git push origin "HEAD:$RELEASE_BRANCH"
+
       - name: Enable auto-merge on the release PR
         # GitHub-native auto-merge waits on *required* status checks only —
         # it will land over a red check that isn't required (the same hazard
@@ -72,7 +113,7 @@ jobs:
         # this run — an unchanged release PR reports prs_created: false, so a
         # push that touches no releasable path is a no-op here too. Re-arming
         # on an already-armed PR is idempotent.
-        if: steps.release.outputs.prs_created == 'true'
+        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           RELEASE_PRS: ${{ steps.release.outputs.prs }}

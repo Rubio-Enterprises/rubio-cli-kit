@@ -2,6 +2,26 @@
 # Backend-prefixed pins (`npm:`, `aqua:`, `github:`) live here, not in .tool-versions.
 
 [tools]
+# uv — declared FIRST because the `pipx:` pins below cannot install without it
+# and every task in this file shells out to it (`uv lock --check`,
+# `uv run --frozen …`). mise's pipx backend routes installs through uvx
+# (`pipx.uvx` defaults true); with neither uv nor a real pipx binary present,
+# `mise install` hard-fails with "pipx is required to install pipx:<tool> but
+# was not found" and every downstream hook dies with command-not-found.
+#
+# Until 2026-09-03 this dependency was UNDECLARED: uv reached CI only via an
+# `astral-sh/setup-uv` step each workflow had to remember, and reached laptops
+# only via a developer's global install. That made green runs a property of the
+# runner image and the mise cache rather than of this file — 20 of 58 repos
+# carried a test-gate with no uv step, of which 4 were outright red and 16
+# passed only because they happened to land on a runner that already had it.
+# Declaring it here makes provisioning mise's job, so the workflow-level
+# setup-uv steps become belt-and-braces instead of load-bearing.
+#
+# Version tracks the pin the injected gates install (astral-sh/setup-uv v8.3.2
+# → uv 0.12.1); Renovate's mise manager bumps it here.
+uv = "0.12.1"
+
 # commitlint via mise's npm: backend so the binary lands on PATH across every
 # archetype. Earlier the template assumed TS consumers carried commitlint as a
 # package.json devDep, but Pattern E preserves the consumer's package.json
@@ -17,7 +37,8 @@
 # without polluting the developer's global tool surface).
 "aqua:koalaman/shellcheck" = "0.11.0"
 "aqua:mvdan/sh"            = "3.13.1"   # shfmt
-"npm:markdownlint-cli2"    = "0.23.1"
+# 2026-08-28: remove this exact fastq exclude once the selected fastq release publishes SLSA provenance.
+"npm:markdownlint-cli2" = { version = "0.23.1", trust_policy_excludes = ["fastq@1.20.2"] }
 "npm:prettier"             = "3.9.6"
 "pipx:yamllint"            = "1.38.0"
 # lefthook binary itself. The lint-hooks CI job runs `mise exec -- lefthook
@@ -60,6 +81,30 @@ node = "22.12.0"
 # .standards/.mise.toml does NOT pin ruff — audit.yml doesn't invoke it;
 # only consumer-side lint-hooks does.
 "pipx:ruff"                = "0.15.22"
+
+# Git hooks are per-repo via lefthook since dotfiles commit 2ea15ce retired the
+# global dispatcher. Local `mise install` activates them without `mise
+# activate`. CI never fires Git hooks; `lint-hooks` runs `lefthook run` with a
+# routed standards token. Ungated CI clones the private standards remote
+# anonymously, and macOS Tart GCM can wait forever (sshfsctl PR #18, run
+# 33554743280, 2026-09-01). Precedents: the v1.55.2-wave fix in
+# Rubio-Enterprises/.github lint-hooks.yml and mac-dev-playbook
+# config_outrunner.cue #295. Linux hid it because mise only warns on hook
+# failure.
+[hooks]
+postinstall = 'test -n "${CI:-}" || mise exec -- lefthook install'
+
+# Regenerate the GENERATED lint configs (floor ⊕ this repo's `*.local`
+# sidecars) without a full `copier update`. Universal rather than facet-gated:
+# every onboarded repo carries `.yamllint` + `.markdownlint-cli2.jsonc`, and the
+# stack facets add `ruff.toml` / `biome.jsonc` on top.
+#
+# Invoked through `bash` rather than the script's own exec bit: copier strips
+# exec bits from rendered files (see the chmod-claude-scripts.sh rationale in
+# copier.yml's `_tasks` block), so relying on it would break on a fresh render.
+[tasks.lint-config]
+description = "Regenerate generated lint configs from the standards floor + this repo's *.local sidecars"
+run = ["bash scripts/regenerate-lint-config.sh"]
 [tasks.lint]
 description = "Lockfile check + Ruff + pyright"
 # `uv lock --check` verifies uv.lock is fresh against pyproject.toml — a stale
@@ -72,11 +117,18 @@ description = "Lockfile check + Ruff + pyright"
 # be found from a bare mise shell. ruff resolves either way; the prefix is
 # consistent across tools and matches `[tasks.test]`'s shape.
 #
+# `--frozen` on every `uv run`: use uv.lock exactly as committed, never write
+# it. A bare `uv run` silently re-locks a stale lock, so a green test/lint run
+# could mask exactly the drift `uv lock --check` exists to report (and, under
+# the lint-hooks CI gate, a rewritten tracked file is a failure). Only `uv
+# lock` writes the lock; staleness is reported by that check here and by the
+# `uv-lockfile-drift` pre-commit hook on the commit that introduced it.
+#
 # py-script archetype (Plan 3 Task 37) splits out below: no pyproject.toml
 # means no `uv run` (uv has nothing to resolve from) and no pyright (no
 # [dependency-groups.dev] to install pyright into). py-script's [tasks.lint]
 # uses bare `mise exec -- ruff check` against the mise-pinned pipx:ruff.
-run = ["uv lock --check", "uv run ruff check .", "uv run ruff format --check .", "uv run pyright"]
+run = ["uv lock --check", "uv run --frozen ruff check .", "uv run --frozen ruff format --check .", "uv run --frozen pyright"]
 
 [tasks.test]
 description = "pytest with strict markers + JUnit"
@@ -85,4 +137,14 @@ description = "pytest with strict markers + JUnit"
 # fails with `command not found`. `uv run pytest` resolves the binary from
 # .venv first, falling back to mise/system PATH if absent. Matches the
 # canonical uv-managed Python project pattern.
-run = ["uv run pytest --strict-markers --junitxml=reports/unit/junit.xml"]
+#
+# NEEDING TO DESELECT MARKERS? Put it in pyproject.toml's
+# `[tool.pytest.ini_options] addopts`, NOT in this run line. This file is
+# template-owned, so a `-m 'not integration'` appended here is drift with a
+# fuse on it: the next re-render rewrites the line and the filter silently
+# disappears. aw-gateway paid that bill on the v1.55.85 bump — its four
+# aw-server integration tests started running on a runner with no server and
+# failed with ConnectError, taking test-gate red. pyproject.toml is
+# `_skip_if_exists`, so a filter expressed there survives every render, and a
+# command-line `-m <marker>` still overrides it for a local run.
+run = ["uv run --frozen pytest --strict-markers --junitxml=reports/unit/junit.xml"]
