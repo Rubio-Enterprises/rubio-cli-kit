@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.5](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.4...v1.2.5) (2026-09-06)
+
+
+### Bug Fixes
+
+* **copier:** canonicalise _src_path owner casing ([#38](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/38)) ([f19ac46](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f19ac46d7530775010724f2029b4cbc09ab214db))
+* **lint:** declare ruff floor sidecar ([#42](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/42)) ([f939da0](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f939da03d1a4a7dd9f2f16d65d6316501a1ed701))
+
 ## [1.2.4](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.3...v1.2.4) (2026-08-19)
 
 
