@@ -42,9 +42,16 @@ ignore = [
 allow-dict-calls-with-keyword-arguments = true
 
 [lint.per-file-ignores]
+# The three test globs carry the same allowance: assert (S101) and print
+# (T201) are the test idiom, and an unused fixture parameter (ARG) is how
+# pytest expresses a dependency. `test/` (singular) and `conftest.py` were
+# added with the anti-verbosity floor (template/v1.55.90) carrying `ARG` only,
+# which matched the fleet measurement but not the validated spec; aligned in
+# the cut after template/v1.55.91 (2026-09-06). Relaxing a per-file-ignore can
+# only remove findings.
 "**/tests/**/*.py" = ["S", "T20", "ARG"]
-"**/test/**/*.py" = ["ARG"]
-"**/conftest.py" = ["ARG"]
+"**/test/**/*.py" = ["S", "T20", "ARG"]
+"**/conftest.py" = ["S", "T20", "ARG"]
 
 [format]
 # SINGLE QUOTES (org floor moved 2026-09-03, following the biome floor's move in
