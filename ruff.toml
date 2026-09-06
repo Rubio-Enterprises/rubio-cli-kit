@@ -2,42 +2,49 @@
 # It is the org lint floor merged with this repo's ruff.toml.local.
 # Repo-specific rule changes go in ruff.toml.local, then run `mise run lint-config`.
 # CI re-derives this config independently, so a stale copy fails the drift check.
+
 target-version = "py313"
 line-length = 100
 
 [lint]
 select = [
-  "E",
-
-  "F",
-
-  "W",
-
-  # pycodestyle, pyflakes
-  "I",
-
-  # isort
-  "N",
-
-  # pep8-naming
-  "UP",
-
-  # pyupgrade
-  "B",
-
-  # bugbear
-  "S",
-
-  # bandit (security)
-  "T20",
-
-  # flake8-print — org floor: data goes through output helpers/loggers, not raw print
-  "RUF",
+  "E", "F", "W",   # pycodestyle, pyflakes
+  "I",             # isort
+  "N",             # pep8-naming
+  "UP",            # pyupgrade
+  "B",             # bugbear
+  "S",             # bandit (security)
+  "T20",           # flake8-print — org floor: data goes through output helpers/loggers, not raw print
+  "RUF",           # ruff-specific
+  # Stable, exact-code anti-verbosity floor. Keep these explicit: family
+  # prefixes would silently widen the gate when Ruff adds rules.
+  "ARG001", "ARG005",
+  "C400", "C401", "C402", "C403", "C404", "C405", "C406",
+  "C408", "C409", "C410", "C411", "C413", "C414", "C415",
+  "C416", "C417", "C418", "C419",
+  "FURB110", "FURB129", "FURB132", "FURB168", "FURB169",
+  "PERF101", "PERF102", "PERF402",
+  "PIE790", "PIE794", "PIE800", "PIE804", "PIE807", "PIE808", "PIE810",
+  "PLC3002",
+  "PLR1714", "PLR1733", "PLR1736", "PLR2044", "PLR5501",
+  "PLW0120", "PLW0127", "PLW0129", "PLW0133", "PLW3301",
+  "RET501", "RET504", "RET505", "RET506", "RET507", "RET508",
+  "SIM101", "SIM102", "SIM103", "SIM110", "SIM113", "SIM114", "SIM118",
+  "SIM201", "SIM202", "SIM208", "SIM210", "SIM211", "SIM212",
+  "SIM220", "SIM221", "SIM222", "SIM223", "SIM401", "SIM910", "SIM911",
+  "TRY201", "TRY203",
 ]
-ignore = ["S101"]
+ignore = [
+  "S101",   # allow assert in tests
+]
+
+[lint.flake8-comprehensions]
+allow-dict-calls-with-keyword-arguments = true
 
 [lint.per-file-ignores]
-"**/tests/**/*.py" = ["S", "T20"]
+"**/tests/**/*.py" = ["S", "T20", "ARG"]
+"**/test/**/*.py" = ["ARG"]
+"**/conftest.py" = ["ARG"]
 
 [format]
 # SINGLE QUOTES (org floor moved 2026-09-03, following the biome floor's move in
