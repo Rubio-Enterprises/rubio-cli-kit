@@ -15,6 +15,10 @@ permissions:
   pull-requests: write # open / update the release PR
 
 jobs:
+  # The 120-minute fleet floor bounds execution on a wedged self-hosted runner
+  # (mac-dev-playbook#917); it never bounds queue time. The measured org-wide
+  # maximum executing job is 47 minutes. A tighter per-class value, where
+  # present, is deliberate and must remain unchanged.
   release-please:
     # release-please is a pure GitHub-API job (no docker daemon, sudo, or
     # browser), matching the glue runner tier's capability profile per
@@ -22,6 +26,7 @@ jobs:
     # The `|| '["ubuntu-latest"]'` fallback is a hosted label so public repos —
     # where the private-visibility org var is invisible — keep working.
     runs-on: ${{ fromJSON(vars.RUNNER_GLUE || '["ubuntu-latest"]') }}
+    timeout-minutes: 120
     steps:
       - name: Mint release-please App token
         id: app-token
