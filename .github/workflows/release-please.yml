@@ -46,32 +46,81 @@ jobs:
           # at the repo root — both are Copier-synced into every consumer repo.
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+      # Every step below used to be gated on `prs_created`, which is true only
+      # on the run that opened or updated the release PR. That made each of
+      # them a one-shot: one transient failure stranded the release PR for
+      # good, because release-please reports `prs_created: false` for a PR
+      # that already exists, so a re-run skipped the repair instead of doing
+      # it (ws run 35345211300 — a flaky mise download skipped the lock
+      # refresh, then `lint-hooks` failed on the stale lock and no later run
+      # could fix it). Resolving the release PR from the repository instead
+      # makes a re-run — or simply the next push to main —
+      # repair whatever the failed run left undone.
+      - name: Resolve the release PR
+        id: release-pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+          # Raw output, never `fromJSON`: GitHub Actions expands `env:` eagerly
+          # even for if-skipped steps (aw-gateway run 32876379705). This step
+          # carries no `if:` at all, but the rule holds for the value's shape —
+          # release-please can report `prs_created: true` while leaving `prs`
+          # empty, right after it closes a merged release PR (aw-gateway run
+          # 32880453268), so the parse must tolerate an empty string.
+          RELEASE_PRS: ${{ steps.release.outputs.prs }}
+        run: |
+          set -euo pipefail
+          prs=${RELEASE_PRS:-}
+          [ -n "$prs" ] || prs='[]'
+          branch=$(jq -r 'first.headBranchName // empty' <<<"$prs")
+          number=$(jq -r 'first.number // empty' <<<"$prs")
+          if [ -z "$branch" ] || [ -z "$number" ]; then
+            # `autorelease: pending` is release-please's own label for an open,
+            # unreleased release PR. One package per repo fleet-wide, matching
+            # the `first`/`[0]` read above; a monorepo config would need the
+            # component here.
+            open_pr=$(gh pr list --repo "$REPO" --state open \
+              --label 'autorelease: pending' --limit 1 \
+              --json number,headRefName)
+            branch=$(jq -r 'first.headRefName // empty' <<<"$open_pr")
+            number=$(jq -r 'first.number // empty' <<<"$open_pr")
+          fi
+          if [ -z "$branch" ] || [ -z "$number" ]; then
+            # No release PR is open: this push released one, or carried nothing
+            # releasable. Both are ordinary, so report empty and let the steps
+            # below skip rather than failing the run.
+            echo 'no open release PR; nothing to refresh or arm'
+            branch=''
+            number=''
+          fi
+          {
+            echo "branch=$branch"
+            echo "number=$number"
+          } >>"$GITHUB_OUTPUT"
 
       - name: Check out release PR
-        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
+        if: steps.release-pr.outputs.branch != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           token: ${{ steps.app-token.outputs.token }}
-          ref: ${{ fromJSON(steps.release.outputs.prs)[0].headBranchName }}
+          ref: ${{ steps.release-pr.outputs.branch }}
       - name: Set up release PR tools
-        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
+        if: steps.release-pr.outputs.branch != ''
         uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
         with:
           install: false
       - name: Refresh Python release lockfile
-        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
+        if: steps.release-pr.outputs.branch != ''
         env:
-          RELEASE_PRS: ${{ steps.release.outputs.prs }}
+          RELEASE_BRANCH: ${{ steps.release-pr.outputs.branch }}
         run: |
           set -euo pipefail
-          # An empty branch means the prs output schema drifted; the checkout
-          # above then silently landed on the triggering commit, where the
-          # lock is already consistent — refresh MUST fail loudly, not no-op
-          # (v0.1.10 of aw-gateway shipped a stale lock exactly this way).
-          # GitHub Actions expands env values even for if-skipped steps, so
-          # env-level fromJSON is forbidden (aw-gateway run 32876379705).
-          RELEASE_BRANCH=$(jq -r 'first.headBranchName // empty' <<<"${RELEASE_PRS:-[]}")
-          if [ -z "$RELEASE_BRANCH" ]; then
+          # The `if:` above already proved this non-empty; re-check anyway,
+          # because an empty value here means the checkout landed on the
+          # triggering commit instead, where the lock is already consistent —
+          # so the refresh would no-op and ship a stale lock (v0.1.10 of
+          # aw-gateway shipped exactly that). It MUST fail loudly instead.
+          if [ -z "${RELEASE_BRANCH:-}" ]; then
             echo "::error::could not resolve the release PR branch from the release-please prs output"
             exit 1
           fi
@@ -114,25 +163,28 @@ jobs:
         # makes merge-only so upstream parentage survives. Assuming squash
         # there is a hard 405.
         #
-        # Only runs when release-please actually created or updated the PR
-        # this run — an unchanged release PR reports prs_created: false, so a
-        # push that touches no releasable path is a no-op here too. Re-arming
-        # on an already-armed PR is idempotent.
-        if: steps.release.outputs.prs_created == 'true' && steps.release.outputs.prs != ''
+        # Runs whenever a release PR is open, not only on the run that opened
+        # it: arming is idempotent, and a run that died before reaching this
+        # step left the PR unarmed with nothing to re-arm it. A push with no
+        # open release PR resolves empty and skips.
+        #
+        # Order matters for the Python refresh above: a failed refresh fails
+        # the job before this step, so a release PR whose lock could not be
+        # refreshed is never armed.
+        if: steps.release-pr.outputs.number != ''
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          RELEASE_PRS: ${{ steps.release.outputs.prs }}
+          PR_NUMBER: ${{ steps.release-pr.outputs.number }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          pr_number=$(echo "$RELEASE_PRS" | jq -r '.[0].number')
           merge_settings=$(gh repo view "$REPO" --json squashMergeAllowed,mergeCommitAllowed)
           if [ "$(echo "$merge_settings" | jq -r '.squashMergeAllowed')" = "true" ]; then
             merge_flag=--squash
           elif [ "$(echo "$merge_settings" | jq -r '.mergeCommitAllowed')" = "true" ]; then
             merge_flag=--merge
           else
-            echo "::error::$REPO allows neither squash nor merge commits; can't auto-merge PR #$pr_number" >&2
+            echo "::error::$REPO allows neither squash nor merge commits; can't auto-merge PR #$PR_NUMBER" >&2
             exit 1
           fi
-          gh pr merge "$pr_number" --repo "$REPO" "$merge_flag" --auto
+          gh pr merge "$PR_NUMBER" --repo "$REPO" "$merge_flag" --auto
