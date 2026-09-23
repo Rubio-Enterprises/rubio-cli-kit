@@ -1,4 +1,4 @@
 {
   "name": "rubio-cli-kit",
-  "image": "ghcr.io/rubio-enterprises/agent-workspace:main@sha256:f0f5deb88a73081db9512da04c880590d29591293aba496715f68c5b116da695"
+  "image": "ghcr.io/rubio-enterprises/agent-workspace:main@sha256:681ca20ed35c9ecfa1630fc97cf77e41449f750f2f01ea97019416cf2ca04590"
 }
