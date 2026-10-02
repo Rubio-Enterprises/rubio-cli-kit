@@ -1,4 +1,6 @@
-# >>> rubio-standards: managed block. DO NOT EDIT between these markers; copier update rewrites it.
+# >>> rubio-standards >>>
+# Managed by rubio-standards Copier template. Do not edit between sentinels —
+# `scripts/merge-gitignore.sh` rewrites this block on every `copier copy/update`.
 .DS_Store
 .envrc.local
 # Machine-local mise overrides (issue #296): the template's sentinel tasks tell
@@ -44,4 +46,4 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .tox/
-# <<< rubio-standards: end of managed block. Add repo-specific entries below.
+# <<< rubio-standards <<<
