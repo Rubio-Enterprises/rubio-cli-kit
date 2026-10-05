@@ -1,10 +1,10 @@
 # rubio-cli-kit
 
-Shared runtime helpers for the Rubio-Enterprises Typer CLI fleet.
+Shared runtime helpers for Rubio-Enterprises Typer CLI tools.
 
 ## What it is
 
-`rubio-cli-kit` provides the four modules used by fleet CLI packages for application construction,
+`rubio-cli-kit` provides the four modules used by per-tool CLI packages for application construction,
 structured diagnostics, stdout/stderr discipline, and XDG path resolution. It sanctions two complete
 CLI shapes: subcommand applications created with `make_app`, and root-argument applications created
 with `make_single_command_app`.

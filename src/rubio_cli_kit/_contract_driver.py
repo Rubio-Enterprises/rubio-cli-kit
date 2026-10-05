@@ -12,7 +12,7 @@ from rubio_cli_kit.testing import CliSandbox
 
 
 class ContractDriver:
-    """Drive installed console scripts through the fleet CLI contract."""
+    """Drive installed console scripts through the shared CLI contract."""
 
     def __init__(self, *, expected_version: str) -> None:
         self.expected_version = expected_version
