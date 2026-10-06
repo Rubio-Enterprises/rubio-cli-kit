@@ -17,7 +17,7 @@ concurrency:
 jobs:
   canonical-tests:
     name: canonical tests
-    runs-on: ${{ fromJSON(vars.RUNNER_GLUE || '["ubuntu-slim"]') }}
+    runs-on: ${{ fromJSON(vars.RUNNERS || '{}').light || fromJSON('["ubuntu-slim"]') }}
     outputs:
       tests_ran: ${{ steps.test.outputs.tests_ran }}
     steps:
@@ -57,7 +57,7 @@ jobs:
     name: test-gate
     if: ${{ always() }}
     needs: [canonical-tests]
-    runs-on: ${{ fromJSON(vars.RUNNER_GLUE || '["ubuntu-slim"]') }}
+    runs-on: ${{ fromJSON(vars.RUNNERS || '{}').light || fromJSON('["ubuntu-slim"]') }}
     env:
       NEEDS_JSON: ${{ toJSON(needs) }}
     steps:
