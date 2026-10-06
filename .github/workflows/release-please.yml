@@ -28,7 +28,7 @@ jobs:
     # mac-dev-playbook docs/homelab/references/architecture/runner-routing.md.
     # The `|| '["ubuntu-latest"]'` fallback is a hosted label so public repos —
     # where the private-visibility org var is invisible — keep working.
-    runs-on: ${{ fromJSON(vars.RUNNER_GLUE || '["ubuntu-latest"]') }}
+    runs-on: ${{ fromJSON(vars.RUNNERS || '{}').light || fromJSON('["ubuntu-latest"]') }}
     timeout-minutes: 120
     steps:
       - name: Mint release-please App token
