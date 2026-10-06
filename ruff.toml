@@ -45,7 +45,7 @@ allow-dict-calls-with-keyword-arguments = true
 # (T201) are the test idiom, and an unused fixture parameter (ARG) is how
 # pytest expresses a dependency. `test/` (singular) and `conftest.py` were
 # added with the anti-verbosity floor (template/v1.55.90) carrying `ARG` only,
-# which matched the fleet measurement but not the validated spec; aligned in
+# which matched the org-set measurement but not the validated spec; aligned in
 # the cut after template/v1.55.91 (2026-09-06). Relaxing a per-file-ignore can
 # only remove findings.
 "**/tests/**/*.py" = ["S", "T20", "ARG"]
@@ -56,7 +56,7 @@ allow-dict-calls-with-keyword-arguments = true
 # SINGLE QUOTES (org floor moved 2026-09-03, following the biome floor's move in
 # #534). `double` was never a decision here — it was ruff's own Black-compatible
 # default, carried in unexamined when this fragment was first written. Measured
-# against the fleet's real Python before flipping: of 50,191 single-line string
+# against the org set's real Python before flipping: of 50,191 single-line string
 # literals across 394 files, 49,469 (99%) contain no inner quote at all and are
 # pure delimiter churn. Among the remainder SINGLE is the more uniform choice by
 # nearly 2:1 — 234 literals embed an apostrophe (ruff keeps those "double" under
