@@ -41,13 +41,13 @@ import typer
 from rubio_cli_kit import _logging
 from rubio_cli_kit._cli import make_app
 
-app = make_app(name="example", help_text="Example commands.")
+app = make_app(name='example', help_text='Example commands.')
 
 
 @app.command()
 def greet(name: Annotated[str, typer.Argument()]) -> None:
-    _logging.get_logger("example").debug("greeting", name=name)
-    typer.echo(f"hello {name}")
+    _logging.get_logger('example').debug('greeting', name=name)
+    typer.echo(f'hello {name}')
 ```
 
 ### Single-command application
@@ -60,13 +60,13 @@ import typer
 from rubio_cli_kit import _logging
 from rubio_cli_kit._cli import make_single_command_app
 
-app = make_single_command_app(name="example", help_text="Print a greeting.")
+app = make_single_command_app(name='example', help_text='Print a greeting.')
 
 
 @app.command()
 def main(name: Annotated[str, typer.Argument()]) -> None:
-    _logging.get_logger("example").debug("greeting", name=name)
-    typer.echo(f"hello {name}")
+    _logging.get_logger('example').debug('greeting', name=name)
+    typer.echo(f'hello {name}')
 ```
 
 The single-command factory adds `--version` and `--verbose` to the root command without forcing the
@@ -91,18 +91,18 @@ from rubio_cli_kit.testing import CliSandbox
 
 
 def _setup(sandbox: CliSandbox) -> None:
-    config = sandbox.xdg_config_path("example", "config.toml")
+    config = sandbox.xdg_config_path('example', 'config.toml')
     config.parent.mkdir(parents=True)
     config.write_text('message = "hello"\n')
 
 
 COMMANDS = (
     CommandContract(
-        name="example",
-        help_paths=(("show",),),
-        json_args=("show", "--json"),
-        usage_error_args=("show", "--unknown"),
-        runtime_error_args=("show",),
+        name='example',
+        help_paths=(('show',),),
+        json_args=('show', '--json'),
+        usage_error_args=('show', '--unknown'),
+        runtime_error_args=('show',),
         setup=_setup,
     ),
 )
