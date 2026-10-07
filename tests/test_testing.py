@@ -72,16 +72,42 @@ def test_cli_execution_has_an_overridable_timeout(tmp_path: Path) -> None:
         sandbox.run('example', timeout=0.01)
 
 
-def test_cli_timeout_terminates_spawned_child_processes(tmp_path: Path) -> None:
+def test_cli_timeout_terminates_spawned_child_processes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     sandbox = _sandbox(
         tmp_path,
-        'sleep 30 &\necho "$!" > child.pid\nwait',
+        'sleep 30 &\nprintf "child-ready=%s\\n" "$!"\nwait',
     )
+    communicate = subprocess.Popen.communicate
+    child_pid: int | None = None
+    observed_timeouts: list[float | None] = []
 
+    def communicate_after_child_ready(
+        process: subprocess.Popen[str],
+        input: str | None = None,
+        timeout: float | None = None,
+    ) -> tuple[str, str]:
+        nonlocal child_pid
+        if child_pid is None:
+            # The timeout tests process-group cleanup, not how quickly macOS
+            # starts a freshly written shell script under parallel load. Wait
+            # for the real child to exist before starting the SAME 0.5s budget.
+            assert process.stdout is not None
+            ready = process.stdout.readline().strip()
+            assert ready.startswith('child-ready='), f'child did not report readiness: {ready!r}'
+            child_pid = int(ready.removeprefix('child-ready='))
+        # Keep the real communicate implementation and the sandbox's real
+        # TimeoutExpired/killpg path, including its second post-kill drain.
+        observed_timeouts.append(timeout)
+        return communicate(process, input=input, timeout=timeout)
+
+    monkeypatch.setattr(subprocess.Popen, 'communicate', communicate_after_child_ready)
     with pytest.raises(subprocess.TimeoutExpired):
         sandbox.run('example', timeout=0.5)
 
-    child_pid = int((sandbox.home / 'child.pid').read_text())
+    assert child_pid is not None
+    assert observed_timeouts == [0.5, None]
     deadline = time.monotonic() + 1
     while _process_exists(child_pid) and time.monotonic() < deadline:
         time.sleep(0.01)
