@@ -47,11 +47,15 @@ uv = "0.12.15"
 # resolve these binaries on a fresh CI runner (and via `mise exec --` locally
 # without polluting the developer's global tool surface).
 "aqua:koalaman/shellcheck" = "0.11.0"
-"aqua:mvdan/sh"            = "3.14.0"   # shfmt
+"aqua:mvdan/sh" = "3.14.0"  # shfmt
 # 2026-08-28: remove this exact fastq exclude once the selected fastq release publishes SLSA provenance.
 "npm:markdownlint-cli2" = { version = "0.23.1", trust_policy_excludes = ["fastq@1.20.2"] }
-"npm:prettier"             = "3.9.6"
-"pipx:yamllint"            = "1.38.0"
+"npm:prettier" = "3.9.6"
+"pipx:yamllint" = "1.38.0"
+# Fixer dispatcher — render before switching the remote hooks (issue #621).
+# Renovate tracks this two-segment aqua pin with the other mise tool floors.
+"aqua:numtide/treefmt" = "2.6.0"
+"aqua:tombi-toml/tombi" = "1.7.3"
 # lefthook binary itself. The lint-hooks CI job runs `mise exec -- lefthook
 # run pre-commit --all-files`, which requires lefthook on PATH from mise (the
 # CI runner doesn't carry it natively). Locally developers usually have
@@ -63,33 +67,29 @@ uv = "0.12.15"
 # lefthook pre-commit gitleaks hook invokes a bare `gitleaks git --staged`,
 # which needs the binary on PATH — the consumer-side lint-hooks CI job
 # doesn't materialize .standards/ so cannot rely on that pin.
-"aqua:gitleaks/gitleaks"     = "8.30.1"
+"aqua:gitleaks/gitleaks" = "8.30.1"
 # yq — used by the `_tasks` merge-yamllint.sh hook to deep-merge consumer-side
 # .yamllint.local into the template-rendered .yamllint at copier render time.
 # Pinning universally so consumers can rely on it for their own scripts too.
-"aqua:mikefarah/yq"          = "4.53.6"
+"aqua:mikefarah/yq" = "4.53.6"
 # copier — the weekly copier-sync reusable workflow (.github/copier-sync.yml)
 # runs a bare `copier update`, bootstrapping tools via mise-action. The CI
 # runner image does not ship copier, so without this pin the sync job exits
 # 127 (command not found). Pinning here lands it on the mise PATH for both CI
 # and local `copier update` parity. The reusable workflow also installs copier
 # explicitly as belt-and-braces for consumers not yet re-rendered with this pin.
-"pipx:copier"                = "9.18.1"
+"pipx:copier" = "9.18.1"
 # Org-wide Node runtime pin — the single template-owned version for every
 # repository, including repos without first-party JS. Renovate bumps it here
 # and in standards' root mirror; Copier update PRs deliver it to consumers,
 # through the canary ring first. The universal npm: hook tools above need it.
 node = "24.21.0"
-# Ruff — Python linter+formatter. The lefthook `ruff-fix` / `ruff-format`
-# pre-commit hooks invoke `ruff` directly (no `mise exec --` prefix), so the
-# binary must be on PATH at hook-run time. Locally developers usually have
-# ruff in the project venv (`pip install -e ".[dev]"` brings it in), but the
-# lint-hooks CI job runs `lefthook run pre-commit --all-files` from a fresh
-# runner that has no project venv. Pinning here via mise's pipx backend
-# lands ruff on PATH the same way yamllint/markdownlint do. The audit-side
-# .standards/.mise.toml does NOT pin ruff — audit.yml doesn't invoke it;
-# only consumer-side lint-hooks does.
-"pipx:ruff"                = "0.16.5"
+# Ruff is owned only by this mise pin, never a project dependency group.
+# Hooks and tasks use `mise exec -- ruff`, even when a project venv exists.
+# Do not add ruff to pyproject.toml.
+"pipx:ruff" = "0.16.5"
+# Biome owns JSON in every repository; JS/TS coverage follows the facets.
+"npm:@biomejs/biome" = "2.5.14"
 
 # Git hooks are per-repo via lefthook since dotfiles commit 2ea15ce retired the
 # global dispatcher. Local `mise install` activates them without `mise
@@ -114,17 +114,15 @@ postinstall = 'test -n "${CI:-}" || mise exec -- lefthook install'
 [tasks.lint-config]
 description = "Regenerate generated lint configs from the standards floor + this repo's *.local sidecars"
 run = ["bash scripts/regenerate-lint-config.sh"]
+
 [tasks.lint]
 description = "Lockfile check + Ruff + pyright"
 # `uv lock --check` verifies uv.lock is fresh against pyproject.toml — a stale
 # lockfile is drift that otherwise surfaces only at deploy/CI-install time
 # (floor promoted from an onboarded consumer customization — §5.2).
-# `uv run` prefix resolves binaries from the project's .venv (managed by uv sync)
-# before falling back to mise's PATH. ruff is pinned in [tools] above (lands on
-# mise PATH for lefthook hooks); pyright is added by the audit-driven patch into
-# [dependency-groups.dev] (lives in .venv). Without `uv run`, `pyright` would not
-# be found from a bare mise shell. ruff resolves either way; the prefix is
-# consistent across tools and matches `[tasks.test]`'s shape.
+# Ruff runs through mise, not uv: uv prepends .venv/bin and could select a
+# second, independently updated ruff. pyright alone uses `uv run` because it
+# needs the project's dependencies and is installed in [dependency-groups.dev].
 #
 # `--frozen` on every `uv run`: use uv.lock exactly as committed, never write
 # it. A bare `uv run` silently re-locks a stale lock, so a green test/lint run
@@ -137,7 +135,7 @@ description = "Lockfile check + Ruff + pyright"
 # means no `uv run` (uv has nothing to resolve from) and no pyright (no
 # [dependency-groups.dev] to install pyright into). py-script's [tasks.lint]
 # uses bare `mise exec -- ruff check` against the mise-pinned pipx:ruff.
-run = ["uv lock --check", "uv run --frozen ruff check .", "uv run --frozen ruff format --check .", "uv run --frozen pyright"]
+run = ["uv lock --check", "mise exec -- ruff check .", "mise exec -- ruff format --check .", "uv run --frozen pyright"]
 
 [tasks.test]
 description = "pytest with strict markers + JUnit"
