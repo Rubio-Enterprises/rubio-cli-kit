@@ -6,7 +6,7 @@ name: standards
 # quotes, YAML 1.1 parsers fold `on` into the boolean `On`. GitHub Actions
 # resolves the key by name regardless, and actionlint accepts both forms.
 #
-# The org's required governance workflows own audit, lint/format, secret-scan,
+# The org's required governance workflows own audit, lint-config, secret-scan,
 # PR title, and typecheck; test-gate.yml owns canonical non-E2E tests. This
 # workflow keeps the scheduled trufflehog scan, repo-local lint-hooks and E2E,
 # and default-branch cache seeding.
