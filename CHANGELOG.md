@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.5](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.4...v1.2.5) (2026-10-10)
+
+
+### Bug Fixes
+
+* **copier:** canonicalise _src_path owner casing ([#38](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/38)) ([f19ac46](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f19ac46d7530775010724f2029b4cbc09ab214db))
+* **docs:** format python readme examples with ruff ([#79](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/79)) ([de07544](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/de07544839d03ca1b8b994f4233dea8e9f0fa40d))
+* **lint:** declare ruff floor sidecar ([#42](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/42)) ([f939da0](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f939da03d1a4a7dd9f2f16d65d6316501a1ed701))
+* **tests:** synchronize child readiness before timeout cleanup ([#81](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/81)) ([1adddc3](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/1adddc38ae2e298f1dab77318f3a7934ff348083))
+
+
+### Documentation
+
+* retire fleet wording in shared CLI contract ([#72](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/72)) ([f613317](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f61331704a9a9e402c12ddd180dfe6fad423d883))
+
 ## [1.2.4](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.3...v1.2.4) (2026-08-19)
 
 
