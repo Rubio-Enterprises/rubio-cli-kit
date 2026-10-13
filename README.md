@@ -1,8 +1,6 @@
 # rubio-cli-kit
 
-Shared runtime helpers for Rubio-Enterprises Typer CLI tools.
-
-## What it is
+Shared CLI-contract helpers and pytest11 contract harness for Rubio-Enterprises per-tool CLI repositories
 
 `rubio-cli-kit` provides the four modules used by per-tool CLI packages for application construction,
 structured diagnostics, stdout/stderr discipline, and XDG path resolution. It sanctions two complete
@@ -14,19 +12,30 @@ package constructing the app, so consumers do not pass or duplicate distribution
 structlog are implementation dependencies of the kit; consumer command modules import and declare
 Typer directly, but do not import Rich or structlog.
 
+## Table of Contents
+
+- [Install](#install)
+- [Usage](#usage)
+- [Contract harness](#contract-harness)
+- [Helper modules](#helper-modules)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Install
 
-The kit is distributed from its public Git repository. Pin a released tag in the consuming package:
+The kit requires Python 3.14.6 or newer and is distributed from its public Git repository.
+Pin a released tag in the consuming package:
 
 ```toml
 [project]
 dependencies = [
   "rubio-cli-kit",
-  "typer>=0.26.8",
+  "typer>=0.27.1",
 ]
 
 [tool.uv.sources]
-rubio-cli-kit = { git = "https://github.com/Rubio-Enterprises/rubio-cli-kit", tag = "v1.0.0" }
+rubio-cli-kit = { git = "https://github.com/Rubio-Enterprises/rubio-cli-kit", tag = "v1.2.4" }
 ```
 
 ## Usage
@@ -155,6 +164,16 @@ mise run lint
 mise run test
 ```
 
+## Contributing
+
+Repository changes go through pull requests with a Conventional Commits title and the sections in
+[.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): What, Why, How, Testing,
+Feedback, and known dependencies (screenshots when relevant). Use repository issues for questions
+and bug reports.
+
+Run `mise run lint` (lockfile, Ruff, and Pyright) and `mise run test` (pytest) before submitting.
+Commit hooks also format and check staged Markdown.
+
 ## License
 
-MIT — see `LICENSE`.
+[MIT](LICENSE) — Copyright (c) 2026 Rubio Enterprises.
