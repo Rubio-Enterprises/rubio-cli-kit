@@ -146,7 +146,7 @@ jobs:
         # rejected this pattern for the plugin carrier controller). It's safe
         # here, and ONLY here, because this repo's required-check set is the
         # full property-driven gate floor (gate_tests, gate_lint_config,
-        # gate_audit, gate_secret_scan, gate_pr_title — see
+        # gate_audit, gate_secret_scan, gate_pr_conventions — see
         # docs/runbooks/create-repo.md): there is no meaningful non-required
         # check left for auto-merge to skip past. A repo that doesn't carry
         # that complete gate-property set is not a safe candidate for this.
