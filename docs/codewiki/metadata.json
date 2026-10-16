@@ -1,0 +1,30 @@
+{
+    "generation_info": {
+        "timestamp": "2026-10-16T18:55:11.110896+00:00",
+        "main_model": "claude-opus-5-5",
+        "generator_version": "2.0.0",
+        "repo_path": "/home/runner/_work/_temp/codewiki-workdir",
+        "commit_id": "902790276697740cba5602b211871faa47abd50d",
+        "language": null,
+        "layout": "hierarchical"
+    },
+    "statistics": {
+        "total_components": 129,
+        "leaf_nodes": 79,
+        "max_depth": 2
+    },
+    "files_generated": [
+        "overview.md",
+        "module_tree.json",
+        "first_module_tree.json",
+        "build_release_and_ci_infrastructure.md",
+        "build_release_and_ci_infrastructure/build_tooling_and_dev_environment.md",
+        "build_release_and_ci_infrastructure/build_tooling_and_dev_environment/build_tooling_and_dev_environment_agent_bootstrap.md",
+        "build_release_and_ci_infrastructure/build_tooling_and_dev_environment/build_tooling_and_dev_environment_packaging_and_release.md",
+        "build_release_and_ci_infrastructure/build_tooling_and_dev_environment/build_tooling_and_dev_environment_toolchain_and_lint.md",
+        "build_release_and_ci_infrastructure/ci_workflows.md",
+        "cli_toolkit_library.md",
+        "cli_toolkit_library/cli_runtime.md",
+        "cli_toolkit_library/contract_testing.md"
+    ]
+}
