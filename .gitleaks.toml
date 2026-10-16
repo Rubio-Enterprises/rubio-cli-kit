@@ -10,4 +10,6 @@ useDefault = true
 description = "Copier-managed public-key/SHA manifests"
 paths = [
   '''\.copier-answers\.yml$''',
+  # CodeWiki's committed dependency graph copies analysed files (has_codewiki, ADR-0026).
+  '''^docs/codewiki/temp/''',
 ]
