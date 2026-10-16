@@ -13,6 +13,8 @@ on-unmatched = "debug"
 # manifests are Xcode's own output: formatting them would make Xcode and Biome
 # undo each other. Keep comments OUT of this array: the Config Delta merge
 # (merge-treefmt.sh) does not preserve comments inside arrays.
+# CodeWiki's JSON state stays exactly as CodeWiki writes it (has_codewiki,
+# ADR-0026); the docs/codewiki/ glob's * also spans temp/.
 excludes = [
   "{,**/}pnpm-lock.yaml",
   "{,**/}package-lock.json",
@@ -26,6 +28,7 @@ excludes = [
   "*.xcassets/{,**/}Contents.json",
   ".github/actions/**/action.yml",
   ".copier-answers.yml",
+  "docs/codewiki/*.json",
 ]
 
 [formatter.markdownlint]

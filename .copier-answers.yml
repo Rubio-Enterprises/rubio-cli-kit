@@ -12,7 +12,7 @@ enforce_tests: true
 enforce_typecheck: true
 enforcement_tier: internal
 has_ansible: false
-has_codewiki: false
+has_codewiki: true
 has_codex_plugin: false
 has_embedded_web: false
 has_go: false
