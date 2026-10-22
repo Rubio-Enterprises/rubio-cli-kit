@@ -66,9 +66,9 @@ Both application shapes guarantee the same external behaviour:
 
 ```python
 class ExitCode(IntEnum):
-    OK = 0        # success
-    RUNTIME = 1   # runtime or domain error
-    USAGE = 2     # usage error (Click/Typer's own parse errors also use 2)
+    OK = 0  # success
+    RUNTIME = 1  # runtime or domain error
+    USAGE = 2  # usage error (Click/Typer's own parse errors also use 2)
 ```
 
 ### prog_name and fail
@@ -81,7 +81,7 @@ class ExitCode(IntEnum):
 from rubio_cli_kit._cli import ExitCode, fail
 
 if not config_path.exists():
-    fail(f'config not found: {config_path}')            # exit 1
+    fail(f'config not found: {config_path}')  # exit 1
 if args_conflict:
     fail('--foo and --bar are exclusive', code=ExitCode.USAGE)  # exit 2
 ```
@@ -216,7 +216,7 @@ Logging state lives in a module-level `_LogState` dataclass with two fields, `ve
 from rubio_cli_kit import _logging
 
 log = _logging.get_logger('example')
-log.debug('greeting', name=name)   # shown only with --verbose
+log.debug('greeting', name=name)  # shown only with --verbose
 log.warning('slow response', seconds=3.2)
 ```
 
@@ -250,10 +250,12 @@ stdout carries data only. stderr carries everything a human reads about progress
 ```python
 from rubio_cli_kit._output import emit_text, render_table
 
-emit_text(render_table(
-    rows=[{'name': 'alpha', 'state': 'ok'}, {'name': 'beta'}],
-    columns=[('name', 'NAME'), ('state', 'STATE')],
-))
+emit_text(
+    render_table(
+        rows=[{'name': 'alpha', 'state': 'ok'}, {'name': 'beta'}],
+        columns=[('name', 'NAME'), ('state', 'STATE')],
+    )
+)
 # NAME   STATE
 # alpha  ok
 # beta
@@ -286,7 +288,7 @@ def xdg_dir(env_var: str, *fallback: str) -> Path
 ```python
 from rubio_cli_kit._paths import xdg_dir
 
-config_home = xdg_dir('XDG_CONFIG_HOME', '.config')        # ~/.config
+config_home = xdg_dir('XDG_CONFIG_HOME', '.config')  # ~/.config
 cache_dir = xdg_dir('XDG_CACHE_HOME', '.cache') / 'mytool'
 ```
 
