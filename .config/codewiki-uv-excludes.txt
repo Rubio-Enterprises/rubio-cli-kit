@@ -1,9 +1,0 @@
-# uv --excludes list for the CodeWiki tool install (has_codewiki, ADR-0026),
-# passed through `uvx_args` in .mise.toml. CodeWiki depends on pythonmonkey
-# (via mermaid-parser-py), which needs pminit, a source-only package whose
-# build runs npm. A cold Dev Container has no npm yet, so `mise install`
-# failed there (standards#690). CodeWiki never loads pythonmonkey on Python
-# 3.12+ (its utils.py disables it; it segfaults at interpreter shutdown) and
-# validates Mermaid with mermaid-py instead, so the tool loses nothing.
-pythonmonkey
-pminit

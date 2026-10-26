@@ -107,11 +107,16 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ steps.release-pr.outputs.branch }}
-      - name: Set up release PR tools
+      # config_model native (ADR-0033): the refresh needs only uv. Any mise
+      # command here would load the root .mise.toml, whose includes resolve
+      # from the private standards repository before a bootstrap, so install
+      # uv directly at the shared pin (config/mise/base.toml) that writes and
+      # checks this lockfile everywhere else.
+      - name: Set up uv
         if: steps.release-pr.outputs.branch != ''
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          install: false
+          version: "0.12.15"
       - name: Refresh Python release lockfile
         if: steps.release-pr.outputs.branch != ''
         env:
@@ -127,8 +132,6 @@ jobs:
             echo "::error::could not resolve the release PR branch from the release-please prs output"
             exit 1
           fi
-          mise use --global pipx@1.16.7 uv@0.12.5
-          mise install
           uv lock
           if git diff --quiet -- uv.lock; then
             exit 0
