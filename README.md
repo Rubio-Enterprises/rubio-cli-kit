@@ -154,20 +154,27 @@ consumer-specific tests. `CliSandbox`, `FakePath`, and `FakeHttpServer` are publ
 
 ## Development
 
+Use mise 2026.10.19 or newer. Bootstrap the private standards checkout before loading the shared
+tasks; repeat this in each new clone or worktree.
+
 ```bash
 git clone git@github.com:Rubio-Enterprises/rubio-cli-kit.git
 cd rubio-cli-kit
-mise install
-uv sync
-lefthook install
+mise trust
+mise bootstrap --only repos,tools --yes
+mise run setup
 mise run lint
 mise run test
 ```
 
+Tool configs and hooks inherit from the gitignored `.standards-config/` checkout on the stable
+channel. Repository exceptions belong in the native config stubs; hook overrides belong in
+`lefthook-local.yml`.
+
 ## Contributing
 
 Repository changes go through pull requests with a Conventional Commits title and the sections in
-[.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): What, Why, How, Testing,
+[organization PR template](https://github.com/Rubio-Enterprises/.github/blob/main/.github/PULL_REQUEST_TEMPLATE.md): What, Why, How, Testing,
 Feedback, and known dependencies (screenshots when relevant). Use repository issues for questions
 and bug reports.
 
