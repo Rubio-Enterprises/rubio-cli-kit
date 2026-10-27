@@ -29,7 +29,7 @@ jobs:
           python-version: "3.14.6"
       # config_model native (ADR-0033): bootstrap the Shared Config Checkout and
       # the pinned tools; .mise.toml cannot load before it.
-      - uses: Rubio-Enterprises/.github/actions/standards-bootstrap@9f1564564ea6d939e86f54a4b2bfca9aba841855 # v4
+      - uses: Rubio-Enterprises/.github/actions/standards-bootstrap@main
         with:
           app-id: ${{ secrets.STANDARDS_READER_APP_ID }}
           private-key: ${{ secrets.STANDARDS_READER_APP_PRIVATE_KEY }}
