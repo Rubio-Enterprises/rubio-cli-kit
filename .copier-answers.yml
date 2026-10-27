@@ -1,6 +1,6 @@
 # Changes here will be overwritten by Copier; NEVER edit this file manually.
-_commit: template/v1.55.153
-_rubio_template_version: template/v1.55.153
+_commit: template/v1.55.154
+_rubio_template_version: template/v1.55.154
 _src_path: https://github.com/Rubio-Enterprises/standards.git
 config_model: native
 default_branch: main
@@ -38,6 +38,7 @@ python_packaging: packaged
 python_project_layout: root
 python_version: 3.14.6
 repo_type: native
+standards_channel: stable
 supported_platforms: []
 typecheck_workload_class: light
 upstream_branch: ''
