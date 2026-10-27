@@ -23,12 +23,7 @@ jobs:
   # maximum executing job is 47 minutes. A tighter per-class value, where
   # present, is deliberate and must remain unchanged.
   release-please:
-    # release-please is a pure GitHub-API job (no docker daemon, sudo, or
-    # browser), matching the glue runner tier's capability profile per
-    # mac-dev-playbook docs/homelab/references/architecture/runner-routing.md.
-    # The `|| '["ubuntu-latest"]'` fallback is a hosted label so public repos —
-    # where the private-visibility org var is invisible — keep working.
-    runs-on: ${{ fromJSON(vars.RUNNERS || '{}').light || fromJSON('["ubuntu-latest"]') }}
+    runs-on: ${{ fromJSON(vars.RUNNERS || '{}').small || fromJSON('["ubuntu-slim"]') }}
     timeout-minutes: 120
     steps:
       - name: Mint release-please App token
@@ -114,7 +109,7 @@ jobs:
       # checks this lockfile everywhere else.
       - name: Set up uv
         if: steps.release-pr.outputs.branch != ''
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           version: "0.12.15"
       - name: Refresh Python release lockfile
