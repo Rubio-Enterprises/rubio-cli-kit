@@ -102,7 +102,7 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           ref: ${{ steps.release-pr.outputs.branch }}
-      # config_model native (ADR-0033): the refresh needs only uv. Any mise
+      # ADR-0033: the refresh needs only uv. Any mise
       # command here would load the root .mise.toml, whose includes resolve
       # from the private standards repository before a bootstrap, so install
       # uv directly at the shared pin (config/mise/base.toml) that writes and
