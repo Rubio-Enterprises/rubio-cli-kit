@@ -1,6 +1,6 @@
 # Changes here will be overwritten by Copier; NEVER edit this file manually.
-_commit: template/v1.55.157
-_rubio_template_version: template/v1.55.157
+_commit: template/v1.55.158
+_rubio_template_version: template/v1.55.158
 _src_path: https://github.com/Rubio-Enterprises/standards.git
 default_branch: main
 enforce_audit: true
@@ -19,6 +19,7 @@ has_codex_plugin: false
 has_container_image: false
 has_embedded_web: false
 has_go: false
+has_herdr_plugin: false
 has_homebrew_formulae: false
 has_javascript: false
 has_knowledgebase: false
@@ -31,14 +32,14 @@ has_typescript: false
 is_claude_carrier: true
 is_marketplace: false
 is_public: true
-lint_hooks_workload_class: light
+lint_hooks_workload_class: small
 project_name: rubio-cli-kit
 python_packaging: packaged
 python_project_layout: root
 python_version: 3.14.6
 repo_type: native
 supported_platforms: []
-typecheck_workload_class: light
+typecheck_workload_class: small
 upstream_branch: ''
 upstream_url: ''
 uses_release_please: true
