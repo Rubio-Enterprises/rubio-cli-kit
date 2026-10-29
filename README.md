@@ -167,8 +167,8 @@ mise run lint
 mise run test
 ```
 
-Tool configs and hooks inherit from the gitignored `.standards-config/` checkout on the stable
-channel. Repository exceptions belong in the native config stubs; hook overrides belong in
+Tool configs and hooks inherit from the gitignored Shared Config Directory at `.standards-config/`,
+following standards `main`. Repository exceptions belong in the native config stubs; hook overrides belong in
 `lefthook-local.yml`.
 
 ## Contributing

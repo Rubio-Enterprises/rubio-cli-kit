@@ -1,5 +1,5 @@
-# ruff.toml — Config Stub (config_model: native, ADR-0033).
-# Extends the shared Ruff floor in the Shared Config Checkout; a missing parent
+# ruff.toml — Config Stub (ADR-0033).
+# Extends the shared Ruff floor in the Shared Config Directory; a missing parent
 # is a hard Ruff error, never a fallback to defaults. The floor anchors its
 # path patterns at this repository's root.
 #
