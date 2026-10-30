@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.14.6"
-      # config_model native (ADR-0033): bootstrap the Shared Config Checkout and
+      # Bootstrap the Shared Config Directory and
       # the pinned tools; .mise.toml cannot load before it.
       - uses: Rubio-Enterprises/.github/actions/standards-bootstrap@main
         with:
