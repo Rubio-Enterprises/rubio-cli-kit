@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.5](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.4...v1.2.5) (2026-10-31)
+
+
+### Bug Fixes
+
+* **copier:** canonicalise _src_path owner casing ([#38](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/38)) ([f19ac46](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f19ac46d7530775010724f2029b4cbc09ab214db))
+* **devcontainer:** mount dependency directories as volumes ([#138](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/138)) ([9106d94](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/9106d94c6527054a3d7805e82b2446563a7f041a))
+* **docs:** format python readme examples with ruff ([#79](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/79)) ([de07544](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/de07544839d03ca1b8b994f4233dea8e9f0fa40d))
+* **lint:** declare ruff floor sidecar ([#42](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/42)) ([f939da0](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f939da03d1a4a7dd9f2f16d65d6316501a1ed701))
+* **tests:** synchronize child readiness before timeout cleanup ([#81](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/81)) ([1adddc3](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/1adddc38ae2e298f1dab77318f3a7934ff348083))
+
+
+### Documentation
+
+* **codewiki:** update generated wiki ([#114](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/114)) ([c2ab69c](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/c2ab69cfa2d3be6ecd1cec2e99be8d8b759c7802))
+* **readme:** conform to the README Standard ([#96](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/96)) ([51fa206](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/51fa206415933a9f4d3dddc2892560183ef30218))
+* refresh shared standards terminology ([#136](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/136)) ([acf3ffe](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/acf3ffe9eec8425c041151975076067cedbee4a3))
+* retire fleet wording in shared CLI contract ([#72](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/72)) ([f613317](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f61331704a9a9e402c12ddd180dfe6fad423d883))
+
 ## [1.2.4](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.3...v1.2.4) (2026-08-19)
 
 
