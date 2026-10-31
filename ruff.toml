@@ -8,4 +8,4 @@
 # its ignores), `lint.ignore` adds ignores, `lint.extend-per-file-ignores` and
 # `extend-exclude` add path entries, and scalars such as `target-version`
 # override.
-extend = ".standards-config/config/ruff.toml"
+extend = ".standards/node_modules/@rubio-enterprises/standards/config/ruff.toml"

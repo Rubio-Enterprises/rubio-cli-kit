@@ -154,22 +154,21 @@ consumer-specific tests. `CliSandbox`, `FakePath`, and `FakeHttpServer` are publ
 
 ## Development
 
-Use mise 2026.10.19 or newer. Bootstrap the private standards checkout before loading the shared
-tasks; repeat this in each new clone or worktree.
+Use mise 2026.10.19 or newer, with `NODE_AUTH_TOKEN` set to a token that can read
+`@rubio-enterprises/standards` from GitHub Packages (`export NODE_AUTH_TOKEN="$(gh auth token)"`).
 
 ```bash
 git clone git@github.com:Rubio-Enterprises/rubio-cli-kit.git
 cd rubio-cli-kit
 mise trust
-mise bootstrap --only repos,tools --yes
 mise run setup
-mise run lint
+mise run check
 mise run test
 ```
 
-Tool configs and hooks inherit from the gitignored Shared Config Directory at `.standards-config/`,
-following standards `main`. Repository exceptions belong in the native config stubs; hook overrides belong in
-`lefthook-local.yml`.
+`mise run setup` installs the latest `@rubio-enterprises/standards` release into the gitignored
+`.standards/`; tool configs and hooks extend it. Repository exceptions belong in each tool's own
+config (`ruff.toml`, `biome.jsonc`) or in `lefthook.override.yml`.
 
 ## Contributing
 
@@ -178,7 +177,8 @@ Repository changes go through pull requests with a Conventional Commits title an
 Feedback, and known dependencies (screenshots when relevant). Use repository issues for questions
 and bug reports.
 
-Run `mise run lint` (lockfile, Ruff, and Pyright) and `mise run test` (pytest) before submitting.
+Run `mise run check` (lockfile, Ruff, Pyright and the other standards Checks) and `mise run test`
+(pytest) before submitting.
 Commit hooks also format and check staged Markdown.
 
 ## License
