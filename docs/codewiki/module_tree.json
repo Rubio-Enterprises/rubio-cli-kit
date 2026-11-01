@@ -1,7 +1,33 @@
 {
-    "cli_toolkit_library": {
-        "path": "src/rubio_cli_kit",
+    "rubio-cli-kit_repository-tooling": {
         "components": [
+            ".editorconfig::.editorconfig",
+            ".github/workflows/copilot-setup-steps.yml::copilot-setup-steps",
+            ".github/workflows/copilot-setup-steps.yml::copilot-setup-steps.yml",
+            ".github/workflows/standards.yml::codewiki-pages",
+            ".github/workflows/standards.yml::files",
+            ".github/workflows/standards.yml::release-please",
+            ".github/workflows/standards.yml::repository-image",
+            ".github/workflows/standards.yml::standards.yml",
+            ".github/workflows/standards.yml::trufflehog",
+            ".github/workflows/test-gate.yml::test-gate",
+            ".github/workflows/test-gate.yml::test-gate.yml",
+            ".release-please-manifest.json::.release-please-manifest.json",
+            "lefthook.override.yml::lefthook.override.yml",
+            "lefthook.yml::lefthook.yml",
+            "mise.toml::mise.toml",
+            "pyproject.toml::pyproject.toml",
+            "release-please-config.json::release-please-config.json",
+            "renovate.json::renovate.json",
+            "ruff.toml::ruff.toml",
+            "tombi.toml::tombi.toml",
+            "treefmt.toml::treefmt.toml"
+        ],
+        "children": {}
+    },
+    "rubio-cli-kit_runtime": {
+        "components": [
+            "src/rubio_cli_kit/__init__.py::__file__",
             "src/rubio_cli_kit/_cli.py::ExitCode",
             "src/rubio_cli_kit/_cli.py::_SingleCommandTyper",
             "src/rubio_cli_kit/_cli.py::_SubcommandTyper",
@@ -24,7 +50,12 @@
             "src/rubio_cli_kit/_output.py::render_table",
             "src/rubio_cli_kit/_output.py::status",
             "src/rubio_cli_kit/_output.py::warn",
-            "src/rubio_cli_kit/_paths.py::xdg_dir",
+            "src/rubio_cli_kit/_paths.py::xdg_dir"
+        ],
+        "children": {}
+    },
+    "rubio-cli-kit_contract-harness": {
+        "components": [
             "src/rubio_cli_kit/_contract_driver.py::ContractDriver",
             "src/rubio_cli_kit/_contract_project.py::Catalog",
             "src/rubio_cli_kit/_contract_project.py::CatalogCommand",
@@ -43,7 +74,12 @@
             "src/rubio_cli_kit/pytest_plugin.py::fake_http_server",
             "src/rubio_cli_kit/pytest_plugin.py::fake_path",
             "src/rubio_cli_kit/pytest_plugin.py::home",
-            "src/rubio_cli_kit/pytest_plugin.py::pytest_collection_modifyitems",
+            "src/rubio_cli_kit/pytest_plugin.py::pytest_collection_modifyitems"
+        ],
+        "children": {}
+    },
+    "rubio-cli-kit_testing": {
+        "components": [
             "src/rubio_cli_kit/testing.py::CliSandbox",
             "src/rubio_cli_kit/testing.py::FakeHttpServer",
             "src/rubio_cli_kit/testing.py::FakePath",
@@ -51,183 +87,6 @@
             "src/rubio_cli_kit/testing.py::HttpResponse",
             "src/rubio_cli_kit/testing.py::_join"
         ],
-        "children": {
-            "cli_runtime": {
-                "path": "src/rubio_cli_kit",
-                "components": [
-                    "src/rubio_cli_kit/_cli.py::ExitCode",
-                    "src/rubio_cli_kit/_cli.py::_SingleCommandTyper",
-                    "src/rubio_cli_kit/_cli.py::_SubcommandTyper",
-                    "src/rubio_cli_kit/_cli.py::_bind_app_identity",
-                    "src/rubio_cli_kit/_cli.py::_bind_logging",
-                    "src/rubio_cli_kit/_cli.py::_importing_distribution_name",
-                    "src/rubio_cli_kit/_cli.py::_print_version",
-                    "src/rubio_cli_kit/_cli.py::_set_app_identity",
-                    "src/rubio_cli_kit/_cli.py::_single_command_type",
-                    "src/rubio_cli_kit/_cli.py::fail",
-                    "src/rubio_cli_kit/_cli.py::make_app",
-                    "src/rubio_cli_kit/_cli.py::make_single_command_app",
-                    "src/rubio_cli_kit/_cli.py::prog_name",
-                    "src/rubio_cli_kit/_logging.py::_LogState",
-                    "src/rubio_cli_kit/_logging.py::configure",
-                    "src/rubio_cli_kit/_logging.py::get_logger",
-                    "src/rubio_cli_kit/_output.py::emit_json",
-                    "src/rubio_cli_kit/_output.py::emit_text",
-                    "src/rubio_cli_kit/_output.py::error",
-                    "src/rubio_cli_kit/_output.py::render_table",
-                    "src/rubio_cli_kit/_output.py::status",
-                    "src/rubio_cli_kit/_output.py::warn",
-                    "src/rubio_cli_kit/_paths.py::xdg_dir"
-                ],
-                "children": {}
-            },
-            "contract_testing": {
-                "path": "src/rubio_cli_kit",
-                "components": [
-                    "src/rubio_cli_kit/_contract_driver.py::ContractDriver",
-                    "src/rubio_cli_kit/_contract_project.py::Catalog",
-                    "src/rubio_cli_kit/_contract_project.py::CatalogCommand",
-                    "src/rubio_cli_kit/_contract_project.py::ContractProject",
-                    "src/rubio_cli_kit/_contract_project.py::ProjectManifest",
-                    "src/rubio_cli_kit/_contract_project.py::_normalize_distribution",
-                    "src/rubio_cli_kit/_contract_project.py::_require_string",
-                    "src/rubio_cli_kit/contracts.py::CommandContract",
-                    "src/rubio_cli_kit/contracts.py::_empty_setup",
-                    "src/rubio_cli_kit/pytest_plugin.py::ContractFile",
-                    "src/rubio_cli_kit/pytest_plugin.py::_failure",
-                    "src/rubio_cli_kit/pytest_plugin.py::_function",
-                    "src/rubio_cli_kit/pytest_plugin.py::_platform_check",
-                    "src/rubio_cli_kit/pytest_plugin.py::cli",
-                    "src/rubio_cli_kit/pytest_plugin.py::cli_env",
-                    "src/rubio_cli_kit/pytest_plugin.py::fake_http_server",
-                    "src/rubio_cli_kit/pytest_plugin.py::fake_path",
-                    "src/rubio_cli_kit/pytest_plugin.py::home",
-                    "src/rubio_cli_kit/pytest_plugin.py::pytest_collection_modifyitems",
-                    "src/rubio_cli_kit/testing.py::CliSandbox",
-                    "src/rubio_cli_kit/testing.py::FakeHttpServer",
-                    "src/rubio_cli_kit/testing.py::FakePath",
-                    "src/rubio_cli_kit/testing.py::HttpRequest",
-                    "src/rubio_cli_kit/testing.py::HttpResponse",
-                    "src/rubio_cli_kit/testing.py::_join"
-                ],
-                "children": {}
-            }
-        }
-    },
-    "build_release_and_ci_infrastructure": {
-        "path": "",
-        "components": [
-            ".github/workflows/cloud-setup-smoke.yml::cloud-setup-smoke",
-            ".github/workflows/cloud-setup-smoke.yml::cloud-setup-smoke.yml",
-            ".github/workflows/copilot-setup-steps.yml::copilot-setup-steps",
-            ".github/workflows/copilot-setup-steps.yml::copilot-setup-steps.yml",
-            ".github/workflows/release-please.yml::release-please",
-            ".github/workflows/release-please.yml::release-please.yml",
-            ".github/workflows/standards.yml::codewiki-pages",
-            ".github/workflows/standards.yml::standards.yml",
-            ".github/workflows/standards.yml::trufflehog",
-            ".github/workflows/test-gate.yml::aggregate",
-            ".github/workflows/test-gate.yml::canonical-tests",
-            ".github/workflows/test-gate.yml::test-gate.yml",
-            "pyproject.toml::pyproject.toml",
-            ".release-please-manifest.json::.release-please-manifest.json",
-            "release-please-config.json::release-please-config.json",
-            "renovate.json::renovate.json",
-            ".copier-answers.yml::.copier-answers.yml",
-            ".editorconfig::.editorconfig",
-            ".gitleaks.toml::.gitleaks.toml",
-            ".mise.toml::.mise.toml",
-            "lefthook.yml::lefthook.yml",
-            "ruff.toml::ruff.toml",
-            "tombi.toml::tombi.toml",
-            "treefmt.toml::treefmt.toml",
-            "scripts/cloud-setup-shim.sh::cloud-setup-shim.sh",
-            "scripts/common/cloud-setup.sh::cloud-setup.sh",
-            "scripts/common/knowledgebase-paths.sh::knowledgebase-paths.sh",
-            "scripts/common/session-start-claude.sh::session-start-claude.sh",
-            "scripts/devcontainer-apple.sh::devcontainer-apple.sh",
-            "scripts/regenerate-lint-config.sh::regenerate-lint-config.sh",
-            "scripts/session-start-claude-shim.sh::session-start-claude-shim.sh"
-        ],
-        "children": {
-            "ci_workflows": {
-                "path": ".github/workflows",
-                "components": [
-                    ".github/workflows/cloud-setup-smoke.yml::cloud-setup-smoke",
-                    ".github/workflows/cloud-setup-smoke.yml::cloud-setup-smoke.yml",
-                    ".github/workflows/copilot-setup-steps.yml::copilot-setup-steps",
-                    ".github/workflows/copilot-setup-steps.yml::copilot-setup-steps.yml",
-                    ".github/workflows/release-please.yml::release-please",
-                    ".github/workflows/release-please.yml::release-please.yml",
-                    ".github/workflows/standards.yml::codewiki-pages",
-                    ".github/workflows/standards.yml::standards.yml",
-                    ".github/workflows/standards.yml::trufflehog",
-                    ".github/workflows/test-gate.yml::aggregate",
-                    ".github/workflows/test-gate.yml::canonical-tests",
-                    ".github/workflows/test-gate.yml::test-gate.yml"
-                ],
-                "children": {}
-            },
-            "build_tooling_and_dev_environment": {
-                "path": ".",
-                "components": [
-                    "pyproject.toml::pyproject.toml",
-                    ".release-please-manifest.json::.release-please-manifest.json",
-                    "release-please-config.json::release-please-config.json",
-                    "renovate.json::renovate.json",
-                    ".copier-answers.yml::.copier-answers.yml",
-                    ".editorconfig::.editorconfig",
-                    ".gitleaks.toml::.gitleaks.toml",
-                    ".mise.toml::.mise.toml",
-                    "lefthook.yml::lefthook.yml",
-                    "ruff.toml::ruff.toml",
-                    "tombi.toml::tombi.toml",
-                    "treefmt.toml::treefmt.toml",
-                    "scripts/cloud-setup-shim.sh::cloud-setup-shim.sh",
-                    "scripts/common/cloud-setup.sh::cloud-setup.sh",
-                    "scripts/common/knowledgebase-paths.sh::knowledgebase-paths.sh",
-                    "scripts/common/session-start-claude.sh::session-start-claude.sh",
-                    "scripts/devcontainer-apple.sh::devcontainer-apple.sh",
-                    "scripts/regenerate-lint-config.sh::regenerate-lint-config.sh",
-                    "scripts/session-start-claude-shim.sh::session-start-claude-shim.sh"
-                ],
-                "children": {
-                    "build_tooling_and_dev_environment_packaging_and_release": {
-                        "components": [
-                            "pyproject.toml::pyproject.toml",
-                            ".release-please-manifest.json::.release-please-manifest.json",
-                            "release-please-config.json::release-please-config.json",
-                            "renovate.json::renovate.json",
-                            ".copier-answers.yml::.copier-answers.yml"
-                        ],
-                        "children": {}
-                    },
-                    "build_tooling_and_dev_environment_toolchain_and_lint": {
-                        "components": [
-                            ".mise.toml::.mise.toml",
-                            "lefthook.yml::lefthook.yml",
-                            "ruff.toml::ruff.toml",
-                            "tombi.toml::tombi.toml",
-                            "treefmt.toml::treefmt.toml",
-                            ".editorconfig::.editorconfig",
-                            ".gitleaks.toml::.gitleaks.toml",
-                            "scripts/regenerate-lint-config.sh::regenerate-lint-config.sh",
-                            "scripts/common/knowledgebase-paths.sh::knowledgebase-paths.sh"
-                        ],
-                        "children": {}
-                    },
-                    "build_tooling_and_dev_environment_agent_bootstrap": {
-                        "components": [
-                            "scripts/cloud-setup-shim.sh::cloud-setup-shim.sh",
-                            "scripts/common/cloud-setup.sh::cloud-setup.sh",
-                            "scripts/session-start-claude-shim.sh::session-start-claude-shim.sh",
-                            "scripts/common/session-start-claude.sh::session-start-claude.sh",
-                            "scripts/devcontainer-apple.sh::devcontainer-apple.sh"
-                        ],
-                        "children": {}
-                    }
-                }
-            }
-        }
+        "children": {}
     }
 }

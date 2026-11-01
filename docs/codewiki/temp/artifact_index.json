@@ -1,6 +1,6 @@
 {
     "token_budget": 200000,
-    "tokens_used": 27033,
+    "tokens_used": 3746,
     "caps": {
         "per_file_bytes": 16384,
         "per_class_files": 40,
@@ -24,17 +24,8 @@
         "ci": {
             "files": [
                 {
-                    "path": ".github/workflows/cloud-setup-smoke.yml",
-                    "bytes": 4994,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": [
-                        "cloud-setup-smoke"
-                    ]
-                },
-                {
                     "path": ".github/workflows/copilot-setup-steps.yml",
-                    "bytes": 1431,
+                    "bytes": 1036,
                     "truncated": false,
                     "loaded": true,
                     "units": [
@@ -42,32 +33,25 @@
                     ]
                 },
                 {
-                    "path": ".github/workflows/release-please.yml",
-                    "bytes": 10195,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": [
-                        "release-please"
-                    ]
-                },
-                {
                     "path": ".github/workflows/standards.yml",
-                    "bytes": 3333,
+                    "bytes": 2465,
                     "truncated": false,
                     "loaded": true,
                     "units": [
                         "codewiki-pages",
+                        "files",
+                        "release-please",
+                        "repository-image",
                         "trufflehog"
                     ]
                 },
                 {
                     "path": ".github/workflows/test-gate.yml",
-                    "bytes": 2562,
+                    "bytes": 2769,
                     "truncated": false,
                     "loaded": true,
                     "units": [
-                        "aggregate",
-                        "canonical-tests"
+                        "test-gate"
                     ]
                 }
             ],
@@ -77,30 +61,9 @@
         "config": {
             "files": [
                 {
-                    "path": ".copier-answers.yml",
-                    "bytes": 998,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
                     "path": ".editorconfig",
-                    "bytes": 210,
+                    "bytes": 285,
                     "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": ".gitleaks.toml",
-                    "bytes": 607,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": ".mise.toml",
-                    "bytes": 17137,
-                    "truncated": true,
                     "loaded": true,
                     "units": []
                 },
@@ -112,8 +75,22 @@
                     "units": []
                 },
                 {
+                    "path": "lefthook.override.yml",
+                    "bytes": 774,
+                    "truncated": false,
+                    "loaded": true,
+                    "units": []
+                },
+                {
                     "path": "lefthook.yml",
-                    "bytes": 1946,
+                    "bytes": 1637,
+                    "truncated": false,
+                    "loaded": true,
+                    "units": []
+                },
+                {
+                    "path": "mise.toml",
+                    "bytes": 2024,
                     "truncated": false,
                     "loaded": true,
                     "units": []
@@ -127,83 +104,28 @@
                 },
                 {
                     "path": "renovate.json",
-                    "bytes": 440,
+                    "bytes": 373,
                     "truncated": false,
                     "loaded": true,
                     "units": []
                 },
                 {
                     "path": "ruff.toml",
-                    "bytes": 3772,
+                    "bytes": 643,
                     "truncated": false,
                     "loaded": true,
                     "units": []
                 },
                 {
                     "path": "tombi.toml",
-                    "bytes": 327,
+                    "bytes": 184,
                     "truncated": false,
                     "loaded": true,
                     "units": []
                 },
                 {
                     "path": "treefmt.toml",
-                    "bytes": 2527,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                }
-            ],
-            "omitted_by_class_cap": [],
-            "not_loaded_budget": []
-        },
-        "script": {
-            "files": [
-                {
-                    "path": "scripts/cloud-setup-shim.sh",
-                    "bytes": 1497,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": "scripts/devcontainer-apple.sh",
-                    "bytes": 1098,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": "scripts/regenerate-lint-config.sh",
-                    "bytes": 9497,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": "scripts/session-start-claude-shim.sh",
-                    "bytes": 1513,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": "scripts/common/cloud-setup.sh",
-                    "bytes": 42902,
-                    "truncated": true,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": "scripts/common/knowledgebase-paths.sh",
-                    "bytes": 3811,
-                    "truncated": false,
-                    "loaded": true,
-                    "units": []
-                },
-                {
-                    "path": "scripts/common/session-start-claude.sh",
-                    "bytes": 16305,
+                    "bytes": 656,
                     "truncated": false,
                     "loaded": true,
                     "units": []
@@ -213,6 +135,6 @@
             "not_loaded_budget": []
         }
     },
-    "nodes": 31,
-    "edges": 11
+    "nodes": 21,
+    "edges": 9
 }
