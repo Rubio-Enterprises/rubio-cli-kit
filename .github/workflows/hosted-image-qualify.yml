@@ -19,7 +19,7 @@ jobs:
   image-route:
     permissions:
       contents: read
-    uses: Rubio-Enterprises/.github/.github/workflows/project-route.yml@f131efa740f7feeeacb838bd99b9178b417e9679
+    uses: Rubio-Enterprises/.github/.github/workflows/project-route.yml@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
     with:
       enable-hosted-image: true
   native:
@@ -90,13 +90,13 @@ jobs:
           persist-credentials: false
       - id: image
         name: Pull and start the exact candidate Repository Image
-        uses: Rubio-Enterprises/.github/actions/project-command@f131efa740f7feeeacb838bd99b9178b417e9679
+        uses: Rubio-Enterprises/.github/actions/project-command@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
         with:
           operation: prepare
           hosted-image: "true"
           token: ${{ github.token }}
       - name: Prove cold policy, nonroot execution and trust the checkout
-        uses: Rubio-Enterprises/.github/actions/project-command@f131efa740f7feeeacb838bd99b9178b417e9679
+        uses: Rubio-Enterprises/.github/actions/project-command@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
         with:
           hosted-image: "true"
           run: |
@@ -108,7 +108,7 @@ jobs:
             mise trust "$GITHUB_WORKSPACE"
       - id: setup
         name: Time canonical in-image setup
-        uses: Rubio-Enterprises/.github/actions/project-command@f131efa740f7feeeacb838bd99b9178b417e9679
+        uses: Rubio-Enterprises/.github/actions/project-command@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
         with:
           hosted-image: "true"
           forward-env: NODE_AUTH_TOKEN MISE_GITHUB_TOKEN
@@ -122,7 +122,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ github.token }}
           MISE_GITHUB_TOKEN: ${{ github.token }}
       - name: Prove package task origin and setup-only auth
-        uses: Rubio-Enterprises/.github/actions/project-command@f131efa740f7feeeacb838bd99b9178b417e9679
+        uses: Rubio-Enterprises/.github/actions/project-command@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
         with:
           hosted-image: "true"
           run: |
@@ -134,7 +134,7 @@ jobs:
               test "$(git hash-object "$src")" = "$want"
             done
       - name: The repository's unchanged Lifecycle and JUnit proof
-        uses: Rubio-Enterprises/.github/actions/project-command@f131efa740f7feeeacb838bd99b9178b417e9679
+        uses: Rubio-Enterprises/.github/actions/project-command@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
         with:
           hosted-image: "true"
           run: |
@@ -167,12 +167,12 @@ jobs:
       - id: expected-failure
         name: Prove a failing project command remains a failure
         continue-on-error: true
-        uses: Rubio-Enterprises/.github/actions/project-command@f131efa740f7feeeacb838bd99b9178b417e9679
+        uses: Rubio-Enterprises/.github/actions/project-command@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
         with:
           hosted-image: "true"
           run: exit 23
       - name: Require the expected failure and multiline environment
-        uses: Rubio-Enterprises/.github/actions/project-command@f131efa740f7feeeacb838bd99b9178b417e9679
+        uses: Rubio-Enterprises/.github/actions/project-command@74ea862a6ec24b43d5cb59be5ebfb230e0dc7c4d
         env:
           COMMAND_OUTCOME: ${{ steps.expected-failure.outcome }}
           PR_TITLE: |
