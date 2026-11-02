@@ -1,0 +1,198 @@
+name: hosted image qualification
+
+"on":
+  pull_request:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: hosted-image-qualify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  native-route:
+    permissions:
+      contents: read
+    uses: Rubio-Enterprises/.github/.github/workflows/project-route.yml@main
+  image-route:
+    permissions:
+      contents: read
+    uses: Rubio-Enterprises/.github/.github/workflows/project-route.yml@359c6bdbdf45523b262c5e7724487f3261df7ed3
+    with:
+      enable-hosted-image: true
+  native:
+    needs: native-route
+    runs-on: ${{ fromJSON(needs.native-route.outputs.runner) }}
+    timeout-minutes: 30
+    steps:
+      - name: Require the existing hosted baseline
+        run: test "$RUNNER_ENVIRONMENT" = github-hosted
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4
+        with:
+          install: false
+      - id: setup
+        name: Time today's canonical native setup
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+          MISE_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          start=$(date +%s%3N)
+          mise run setup
+          echo "setup-ms=$(( $(date +%s%3N) - start ))" >> "$GITHUB_OUTPUT"
+      - name: The repository's unchanged Lifecycle and JUnit proof
+        run: |
+          if [ "$(mise exec -- printenv STANDARDS_TEST_GATE || true)" = off ]; then
+            echo "::notice::Test Gate Opt-out: STANDARDS_TEST_GATE = off in mise.toml"
+            exit 0
+          fi
+          for task in typecheck build test e2e; do
+            if ! mise tasks info "$task" >/dev/null 2>&1; then echo "no $task task"; continue; fi
+            rm -rf reports/test
+            echo "::group::mise run $task"
+            mise run "$task"
+            echo "::endgroup::"
+            case $task in test | e2e)
+              # reports/test/junit.xml, or one report per package in a monorepo.
+              if [ -z "$(find reports/test -name '*.xml' 2>/dev/null)" ]; then
+                echo "::error::$task wrote no JUnit report under reports/test/"
+                exit 1
+              fi
+              junit() { find reports/test -name '*.xml' -exec cat {} + | { grep -oE "$1" || true; } | wc -l; }
+              cases=$(junit '<testcase[ >]')
+              failed=$(junit '<(failure|error)[ >/]')
+              echo "$task: $cases test cases, $failed failures or errors"
+              if [ "$cases" -eq 0 ] || [ "$failed" -ne 0 ]; then
+                echo "::error::$task: the JUnit proof needs at least one test case and no failures"
+                exit 1
+              fi
+            esac
+          done
+      - name: Record native setup
+        env:
+          SETUP_MS: ${{ steps.setup.outputs.setup-ms }}
+        run: echo "Native setup milliseconds=$SETUP_MS"
+  image:
+    needs: image-route
+    runs-on: ${{ fromJSON(needs.image-route.outputs.runner) }}
+    timeout-minutes: 30
+    steps:
+      - name: Require hosted image routing
+        env:
+          HOSTED_IMAGE: ${{ needs.image-route.outputs.hosted-image }}
+        run: test "$HOSTED_IMAGE" = true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - id: image
+        name: Pull and start the exact candidate Repository Image
+        uses: Rubio-Enterprises/.github/actions/project-command@359c6bdbdf45523b262c5e7724487f3261df7ed3
+        with:
+          operation: prepare
+          hosted-image: "true"
+          token: ${{ github.token }}
+      - name: Prove cold policy, nonroot execution and trust the checkout
+        uses: Rubio-Enterprises/.github/actions/project-command@359c6bdbdf45523b262c5e7724487f3261df7ed3
+        with:
+          hosted-image: "true"
+          run: |
+            test "$(id -u)" != 0
+            test ! -e .standards/node_modules/@rubio-enterprises/standards/mise/standards.toml
+            test -z "${NODE_AUTH_TOKEN:-}"
+            test "$UV_LINK_MODE" = copy
+            cat /etc/os-release
+            mise trust "$GITHUB_WORKSPACE"
+      - id: setup
+        name: Time canonical in-image setup
+        uses: Rubio-Enterprises/.github/actions/project-command@359c6bdbdf45523b262c5e7724487f3261df7ed3
+        with:
+          hosted-image: "true"
+          forward-env: NODE_AUTH_TOKEN MISE_GITHUB_TOKEN
+          run: |
+            start=$(date +%s%3N)
+            mise run setup
+            echo "setup-ms=$(( $(date +%s%3N) - start ))" >> "$GITHUB_OUTPUT"
+            test -f .standards/node_modules/@rubio-enterprises/standards/mise/standards.toml
+            node -p "require('./.standards/node_modules/@rubio-enterprises/standards/package.json').version"
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+          MISE_GITHUB_TOKEN: ${{ github.token }}
+      - name: Prove package task origin and setup-only auth
+        uses: Rubio-Enterprises/.github/actions/project-command@359c6bdbdf45523b262c5e7724487f3261df7ed3
+        with:
+          hosted-image: "true"
+          run: |
+            test -z "${NODE_AUTH_TOKEN:-}"
+            pkg=.standards/node_modules/@rubio-enterprises/standards/mise/standards.toml
+            want="$(git hash-object "$pkg")"
+            for task in check check:pr; do
+              src="$(mise tasks info "$task" --json | jq -r .source)"
+              test "$(git hash-object "$src")" = "$want"
+            done
+      - name: The repository's unchanged Lifecycle and JUnit proof
+        uses: Rubio-Enterprises/.github/actions/project-command@359c6bdbdf45523b262c5e7724487f3261df7ed3
+        with:
+          hosted-image: "true"
+          run: |
+            if [ "$(mise exec -- printenv STANDARDS_TEST_GATE || true)" = off ]; then
+              echo "::notice::Test Gate Opt-out: STANDARDS_TEST_GATE = off in mise.toml"
+              exit 0
+            fi
+            for task in typecheck build test e2e; do
+              if ! mise tasks info "$task" >/dev/null 2>&1; then echo "no $task task"; continue; fi
+              rm -rf reports/test
+              echo "::group::mise run $task"
+              mise run "$task"
+              echo "::endgroup::"
+              case $task in test | e2e)
+                # reports/test/junit.xml, or one report per package in a monorepo.
+                if [ -z "$(find reports/test -name '*.xml' 2>/dev/null)" ]; then
+                  echo "::error::$task wrote no JUnit report under reports/test/"
+                  exit 1
+                fi
+                junit() { find reports/test -name '*.xml' -exec cat {} + | { grep -oE "$1" || true; } | wc -l; }
+                cases=$(junit '<testcase[ >]')
+                failed=$(junit '<(failure|error)[ >/]')
+                echo "$task: $cases test cases, $failed failures or errors"
+                if [ "$cases" -eq 0 ] || [ "$failed" -ne 0 ]; then
+                  echo "::error::$task: the JUnit proof needs at least one test case and no failures"
+                  exit 1
+                fi
+              esac
+            done
+      - id: expected-failure
+        name: Prove a failing project command remains a failure
+        continue-on-error: true
+        uses: Rubio-Enterprises/.github/actions/project-command@359c6bdbdf45523b262c5e7724487f3261df7ed3
+        with:
+          hosted-image: "true"
+          run: exit 23
+      - name: Require the expected failure and multiline environment
+        uses: Rubio-Enterprises/.github/actions/project-command@359c6bdbdf45523b262c5e7724487f3261df7ed3
+        env:
+          COMMAND_OUTCOME: ${{ steps.expected-failure.outcome }}
+          PR_TITLE: |
+            first line
+            second line
+        with:
+          hosted-image: "true"
+          forward-env: COMMAND_OUTCOME PR_TITLE
+          run: |
+            test "$COMMAND_OUTCOME" = failure
+            test "$(printf '%s' "$PR_TITLE" | wc -l)" -eq 2
+            test -z "${NODE_AUTH_TOKEN:-}"
+      - name: Record image timings
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+          PULL: ${{ steps.image.outputs.pull-seconds }}
+          START: ${{ steps.image.outputs.start-seconds }}
+          CLI: ${{ steps.image.outputs.cli-seconds }}
+          PREPARE: ${{ steps.image.outputs.prepare-seconds }}
+          SETUP_MS: ${{ steps.setup.outputs.setup-ms }}
+        run: |
+          echo "Image=$IMAGE pull_seconds=$PULL start_seconds=$START"
+          echo "cli_seconds=$CLI prepare_seconds=$PREPARE setup_milliseconds=$SETUP_MS"
