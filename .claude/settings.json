@@ -3,12 +3,7 @@
     "SessionStart": [
       {
         "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "mise run setup"
-          }
-        ]
+        "hooks": [{ "type": "command", "command": "mise run setup" }]
       }
     ]
   }
