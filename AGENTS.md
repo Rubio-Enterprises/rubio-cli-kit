@@ -1,6 +1,20 @@
 # Agent context
 
-This repo follows the Rubio-Enterprises standards (`@rubio-enterprises/standards`): `mise run setup` installs the package, its tools and the git hooks; `mise run check` runs every Check; `mise run test` runs the tests.
+First command in a fresh checkout: `just build`.
+Never install toolchains on the host — all project commands run in the dev image through `just`.
+
+```bash
+just build
+just setup
+just check
+just fmt
+just check-pr
+just test
+just shell
+just exec <cmd...>
+```
+
+Single test: `just exec uv run pytest path::test` (Python); otherwise prefix the underlying runner with `just exec`.
 
 ## Repository context
 

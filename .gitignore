@@ -28,7 +28,6 @@ htmlcov/
 .ruff_cache/
 .mypy_cache/
 .tox/
-.standards/
 # Personal overlays (the repository config lives in mise.toml and lefthook.yml)
 lefthook-local.yml
 .mise.local.toml
