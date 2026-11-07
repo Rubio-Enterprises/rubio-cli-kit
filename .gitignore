@@ -1,3 +1,4 @@
+# S53 injected Test Gate canary, removed with this branch
 .DS_Store
 .envrc.local
 # Use .envrc.local for machine-local values
