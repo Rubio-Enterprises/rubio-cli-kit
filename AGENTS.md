@@ -18,6 +18,12 @@ Single test: `just exec uv run pytest path::test` (Python); otherwise prefix the
 
 ## Repository context
 
+- **Architecture decisions**: an ADR records why a rule exists. Before changing a decision, check
+  `docs/adr/` for an accepted ADR; reversing one needs a superseding ADR. Write one only if a
+  person approved it: in the session, or in an approved plan or `delegate-to-agent` issue that
+  names the ADR. Otherwise the PR description is the record. Follow
+  [the format](docs/adr/0001-record-architecture-decisions.md), which states the ADR test.
+
 This public library is the shared runtime dependency for the per-tool CLI repositories extracted
 from `Rubio-Enterprises/dotfiles` under dotfiles issue #316. The initial helper implementation was
 copied from dotfiles commit `aadd937066c508b47b1a0f3df9b7f22dfa4833e4`: the `_cli`, `_logging`,
