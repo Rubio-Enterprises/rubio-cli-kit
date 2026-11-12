@@ -15,7 +15,8 @@ from enum import IntEnum
 from typing import Any, NoReturn, cast
 
 import typer
-from typer.core import TyperCommand, TyperOption
+from typer.core import TyperCommand
+from typer.main import get_command
 
 from rubio_cli_kit import _logging, _output
 
@@ -170,7 +171,6 @@ def make_app(
 def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
     def version_callback(
         ctx: typer.Context,
-        _param: Any,
         requested: bool,
     ) -> None:
         if requested and not ctx.resilient_parsing:
@@ -179,11 +179,33 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
 
     def verbose_callback(
         ctx: typer.Context,
-        _param: Any,
         verbose: bool,
     ) -> None:
         if not ctx.resilient_parsing:
             _logging.configure(verbose=verbose)
+
+    options_app = typer.Typer(add_completion=False)
+
+    @options_app.command()
+    def root_options(
+        version: bool = typer.Option(
+            False,
+            '--version',
+            is_eager=True,
+            expose_value=False,
+            callback=version_callback,
+            help='Print the package version and exit.',
+        ),
+        verbose: bool = typer.Option(
+            False,
+            '--verbose',
+            is_eager=True,
+            expose_value=False,
+            callback=verbose_callback,
+            help='Enable DEBUG diagnostics on stderr.',
+        ),
+    ) -> None:
+        del version, verbose
 
     class SingleCommand(TyperCommand):
         def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -197,26 +219,7 @@ def _single_command_type(*, name: str, distribution: str) -> type[TyperCommand]:
                 raise TypeError(
                     'single-command apps have reserved root options: ' + ', '.join(collisions)
                 )
-            self.params.extend(
-                [
-                    TyperOption(
-                        param_decls=['--version'],
-                        is_flag=True,
-                        is_eager=True,
-                        expose_value=False,
-                        callback=version_callback,
-                        help='Print the package version and exit.',
-                    ),
-                    TyperOption(
-                        param_decls=['--verbose'],
-                        is_flag=True,
-                        is_eager=True,
-                        expose_value=False,
-                        callback=verbose_callback,
-                        help='Enable DEBUG diagnostics on stderr.',
-                    ),
-                ]
-            )
+            self.params.extend(get_command(options_app).params)
 
         def parse_args(  # type: ignore[override]
             self,
