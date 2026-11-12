@@ -149,6 +149,65 @@ def test_distribution_name_comes_from_importing_package(
     assert result.stderr == ''
 
 
+@pytest.mark.parametrize(
+    ('args', 'expected_stdout', 'verbose'),
+    [
+        (['--version'], '1.2.3\n', False),
+        (['7', '--count', '2'], '14\n', False),
+        (['--verbose', '7', '--count', '2'], '14\n', True),
+        (['7', '--count', '2', '--verbose'], '14\n', True),
+    ],
+)
+def test_single_command_root_flags_preserve_typed_consumer_parameters(
+    monkeypatch: pytest.MonkeyPatch,
+    args: list[str],
+    expected_stdout: str,
+    verbose: bool,
+) -> None:
+    _patch_version(monkeypatch, expected_distribution='rubio_cli_kit')
+    app = _make_app_from_package(make_single_command_app)
+
+    @app.command()
+    def main(
+        ctx: typer.Context,
+        value: Annotated[int, typer.Argument()],
+        count: Annotated[int, typer.Option('--count')],
+    ) -> None:
+        assert ctx.params == {'value': value, 'count': count}
+        _logging.get_logger('example').debug('typed consumer command')
+        typer.echo(value * count)
+
+    result = runner.invoke(app, args)
+
+    assert result.exit_code == 0, result.exception
+    assert result.stdout == expected_stdout
+    assert ('typed consumer command' in result.stderr) is verbose
+
+
+def test_single_command_root_flags_respect_resilient_parsing(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def unexpected_version_lookup(_distribution: str) -> str:
+        raise AssertionError('resilient parsing must not resolve the version')
+
+    monkeypatch.setattr(importlib.metadata, 'version', unexpected_version_lookup)
+    _logging.configure(verbose=False)
+    app = _make_app_from_package(make_single_command_app)
+
+    @app.command()
+    def main() -> None:
+        raise AssertionError('resilient parsing must not invoke the command')
+
+    command = get_command(app)
+    with command.make_context('example', ['--verbose', '--version'], resilient_parsing=True):
+        _logging.get_logger('example').debug('resilient parsing must not change logging')
+
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    assert captured.err == ''
+
+
 def test_factories_do_not_accept_distribution_metadata() -> None:
     for factory in (make_app, make_single_command_app):
         assert 'dist_name' not in inspect.signature(factory).parameters
