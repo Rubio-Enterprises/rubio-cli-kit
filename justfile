@@ -4,7 +4,8 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 export RUBIO_BUILD_GITHUB_TOKEN := env('GH_TOKEN', env('GITHUB_TOKEN', ''))
 export REPO_DIR := justfile_directory()
 export COMPOSE_PROJECT_NAME := "repo-" + sha256(justfile_directory())
-export GIT_COMMON_DIR := `git rev-parse --path-format=absolute --git-common-dir`
+unexport GIT_COMMON_DIR
+export RUBIO_GIT_COMMON_DIR := `env -u GIT_COMMON_DIR git rev-parse --path-format=absolute --git-common-dir`
 
 _run := if path_exists('/opt/standards') == 'true' { '' } else { 'docker compose run --rm -T dev' }
 interactive := if path_exists('/opt/standards') == 'true' { '' } else { 'docker compose run --rm dev' }
