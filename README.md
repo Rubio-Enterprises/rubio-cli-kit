@@ -154,20 +154,19 @@ consumer-specific tests. `CliSandbox`, `FakePath`, and `FakeHttpServer` are publ
 
 ## Development
 
-Use mise 2026.10.19 or newer, with `NODE_AUTH_TOKEN` set to a token that can read
-`@rubio-enterprises/standards` from GitHub Packages (`export NODE_AUTH_TOKEN="$(gh auth token)"`).
+Use Docker, `just`, and Git. The dev image installs the pins in `image/mise.toml`.
 
 ```bash
 git clone git@github.com:Rubio-Enterprises/rubio-cli-kit.git
 cd rubio-cli-kit
-mise trust
-mise run setup
-mise run check
-mise run test
+just build
+just setup
+just check
+just test
 ```
 
-`mise run setup` installs the latest `@rubio-enterprises/standards` release into the gitignored
-`.standards/`; tool configs and hooks extend it. Repository exceptions belong in each tool's own
+`just build` builds the dev image; `just setup` installs dependencies and hooks.
+Tool configs and hooks extend `/opt/standards` inside the image. Repository exceptions belong in each tool's own
 config (`ruff.toml`, `biome.jsonc`) or in `lefthook.override.yml`.
 
 ## Contributing
@@ -177,7 +176,7 @@ Repository changes go through pull requests with a Conventional Commits title an
 Feedback, and known dependencies (screenshots when relevant). Use repository issues for questions
 and bug reports.
 
-Run `mise run check` (lockfile, Ruff, Pyright and the other standards Checks) and `mise run test`
+Run `just check` (lockfile, Ruff, Pyright and the other standards Checks) and `just test`
 (pytest) before submitting.
 Commit hooks also format and check staged Markdown.
 
