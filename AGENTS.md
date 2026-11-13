@@ -1,18 +1,10 @@
 # Agent context
 
-First command in a fresh checkout: `just build`.
-Never install toolchains on the host — all project commands run in the dev image through `just`.
+## Commands
 
-```bash
-just build
-just setup
-just check
-just fmt
-just check-pr
-just test
-just shell
-just exec <cmd...>
-```
+Run every project command through `just`, which runs it in this repository's dev image; the host carries no project toolchain.
+
+In a fresh checkout: `just build`, then `just setup`. `just --list` shows the recipes.
 
 Single test: `just exec uv run pytest path::test` (Python); otherwise prefix the underlying runner with `just exec`.
 
