@@ -1,5 +1,7 @@
 # rubio-cli-kit
 
+<!-- Temporary undeclared macOS Test Gate control canary. -->
+
 Shared CLI-contract helpers and pytest11 contract harness for Rubio-Enterprises per-tool CLI repositories
 
 `rubio-cli-kit` provides the four modules used by per-tool CLI packages for application construction,
