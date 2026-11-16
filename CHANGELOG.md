@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.2.5](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.4...v1.2.5) (2026-11-13)
+
+
+### Bug Fixes
+
+* **cli:** build root options through typer's public api ([#167](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/167)) ([2c0cd11](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/2c0cd1142343054591ab555150f3cb055b9dcc80))
+* **copier:** canonicalise _src_path owner casing ([#38](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/38)) ([f19ac46](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f19ac46d7530775010724f2029b4cbc09ab214db))
+* **devcontainer:** drop image-inherited features from the feature lock ([#155](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/155)) ([d517eec](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/d517eece7a72b84b6e2c4e5d8af7d21a6ea32e0c))
+* **devcontainer:** mount dependency directories as volumes ([#138](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/138)) ([9106d94](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/9106d94c6527054a3d7805e82b2446563a7f041a))
+* **docs:** format python readme examples with ruff ([#79](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/79)) ([de07544](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/de07544839d03ca1b8b994f4233dea8e9f0fa40d))
+* **lint:** declare ruff floor sidecar ([#42](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/42)) ([f939da0](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f939da03d1a4a7dd9f2f16d65d6316501a1ed701))
+* **python:** make uv use the mise-pinned python ([#156](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/156)) ([1ef08e3](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/1ef08e31222fef46f989d36e38eff6effd49650e))
+* **standards:** keep git's environment out of project processes ([#171](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/171)) ([7d58fde](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/7d58fde0d04f73d3b4255a4899d50f12780faac7))
+* **tests:** synchronize child readiness before timeout cleanup ([#81](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/81)) ([1adddc3](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/1adddc38ae2e298f1dab77318f3a7934ff348083))
+
+
+### Documentation
+
+* **adr:** add the starter record ([#165](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/165)) ([e163de4](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/e163de425fadced86ac8f2a75f952be8bfe554fc))
+* **codewiki:** update generated wiki ([#114](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/114)) ([c2ab69c](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/c2ab69cfa2d3be6ecd1cec2e99be8d8b759c7802))
+* **codewiki:** update generated wiki ([#147](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/147)) ([6fc4516](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/6fc451664cdbea70c84862a93f2f7ca8bd346fa7))
+* name the spec:agent state in the adr rule ([#166](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/166)) ([410948e](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/410948e403d03d44466691e2c7fece1e2b7d7e6c))
+* **readme:** conform to the README Standard ([#96](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/96)) ([51fa206](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/51fa206415933a9f4d3dddc2892560183ef30218))
+* refresh shared standards terminology ([#136](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/136)) ([acf3ffe](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/acf3ffe9eec8425c041151975076067cedbee4a3))
+* retire fleet wording in shared CLI contract ([#72](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/72)) ([f613317](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/f61331704a9a9e402c12ddd180dfe6fad423d883))
+
 ## [1.2.4](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.3...v1.2.4) (2026-08-19)
 
 
