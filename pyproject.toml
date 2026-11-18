@@ -26,3 +26,6 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers"
+
+[tool.uv]
+exclude-newer = "7 days"
