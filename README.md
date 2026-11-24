@@ -159,13 +159,13 @@ Use Docker, `just`, and Git. The dev image installs the pins in `image/mise.toml
 ```bash
 git clone git@github.com:Rubio-Enterprises/rubio-cli-kit.git
 cd rubio-cli-kit
-just build
+just build-dev
 just setup
 just check
 just test
 ```
 
-`just build` builds the dev image; `just setup` installs dependencies and hooks.
+`just build-dev` builds the dev image; `just setup` installs dependencies and hooks.
 Tool configs and hooks extend `/opt/standards` inside the image. Repository exceptions belong in each tool's own
 config (`ruff.toml`, `biome.jsonc`) or in `lefthook.override.yml`.
 

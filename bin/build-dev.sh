@@ -24,6 +24,6 @@ elif docker image inspect "$base" >/dev/null 2>&1; then
   docker compose build dev
 else
   printf '%s\n' "$refusal" >&2
-  echo "Cannot pull $base and no local base image is available. Authenticate to the registry and run just build again." >&2
+  echo "Cannot pull $base and no local base image is available. Authenticate to the registry and run just build-dev again." >&2
   exit 1
 fi
