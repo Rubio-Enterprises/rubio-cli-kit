@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.6...v2.0.0) (2026-11-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* adopt the shared recipe vocabulary ([#181](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/181))
+
+### Features
+
+* adopt the shared recipe vocabulary ([#181](https://github.com/Rubio-Enterprises/rubio-cli-kit/issues/181)) ([d2b27a6](https://github.com/Rubio-Enterprises/rubio-cli-kit/commit/d2b27a6c2106692fe148bcc6df8920d34600edac))
+
 ## [1.2.6](https://github.com/Rubio-Enterprises/rubio-cli-kit/compare/v1.2.5...v1.2.6) (2026-11-19)
 
 
